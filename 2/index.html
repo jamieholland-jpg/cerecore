@@ -78,7 +78,7 @@
   .card-hover:hover { box-shadow: 0 8px 24px -8px rgba(28, 25, 23, 0.12); transform: translateY(-1px); transition: all 0.2s ease; }
 
   /* Pills / badges */
-  .pill { display: inline-flex; align-items: center; gap: 6px; padding: 5px 11px; border-radius: 999px; font-size: 13px; font-weight: 500; }
+  .pill { display: inline-flex; align-items: center; gap: 6px; padding: 5px 11px; border-radius: 999px; font-size: 13px; font-weight: 500; white-space: nowrap; }
   .pill-brand { background: var(--gold-soft); color: var(--gold-dark); }
   .pill-sky { background: var(--sky-soft); color: var(--sky-dark); }
   .pill-teal { background: var(--teal-soft); color: var(--teal); }
@@ -101,6 +101,34 @@
   .page { display: none; animation: fadeIn 0.25s ease; }
   .page.active { display: block; }
   @keyframes fadeIn { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: translateY(0); } }
+
+  .fld-head { display: flex; align-items: center; gap: 10px; width: 100%; text-align: left;
+    padding: 18px 24px; background: none; border: 0; cursor: pointer; }
+  .fld-head:hover .fld-chev { color: var(--ink) !important; }
+  .fld-chev { transition: transform 0.15s ease; flex: 0 0 auto; }
+  .fld-chev-closed { transform: rotate(-90deg); }
+  .fld-body { padding: 0 24px 22px; }
+  .fld-count { font-size: 12px; font-weight: 700; color: var(--ink-3); background: var(--cream-2);
+    border-radius: 999px; padding: 2px 9px; }
+  .fld-list { border: 1px solid var(--line); border-radius: 12px; }
+  .fld-row { display: flex; align-items: center; justify-content: space-between; gap: 10px;
+    padding: 9px 14px; border-bottom: 1px solid var(--line); font-size: 14px; }
+  .fld-row:last-child { border-bottom: 0; }
+  .fld-row:hover { background: var(--cream); }
+  .fld-row button { color: var(--ink-3); background: none; border: 0; cursor: pointer; padding: 3px; border-radius: 6px; flex: 0 0 auto; }
+  .fld-row button:hover { color: var(--rose); background: #ffe4e6; }
+  .fld-new { display: flex; gap: 8px; margin-bottom: 10px; }
+  .fld-empty { font-size: 13px; color: var(--ink-3); padding: 14px 2px 0; }
+
+  .empty-state { text-align: center; padding: 40px 20px 34px; }
+  .empty-icon { width: 60px; height: 60px; border-radius: 999px; margin: 0 auto 18px;
+    display: flex; align-items: center; justify-content: center; background: var(--cream-2); color: var(--ink-3); }
+  .empty-state p { color: var(--ink-3); font-size: 15px; max-width: 460px; margin: 8px auto 0; }
+  .empty-foot { font-size: 13px !important; margin-top: 18px !important; }
+  .ready-item { display: flex; gap: 10px; align-items: flex-start; font-size: 14px; color: var(--ink-2); }
+  .ready-item svg { color: var(--teal); flex: 0 0 auto; margin-top: 2px; }
+  .ready-item b { display: block; font-weight: 600; color: var(--ink); }
+  .ready-item span { display: block; font-size: 12px; color: var(--ink-3); margin-top: 1px; }
 
   /* Drag handles */
   .drag-handle { cursor: grab; color: var(--ink-3); }
@@ -236,6 +264,9 @@
   .report-scroll::-webkit-scrollbar-thumb { background: var(--line); border-radius: 4px; }
   .report-scroll::-webkit-scrollbar-thumb:hover { background: var(--ink-3); }
   .report-table { width: 100%; font-size: 15px; border-collapse: collapse; table-layout: auto; }
+  /* Fixed layout keeps the table exactly as wide as its container, so the row's
+     action never scrolls out of reach. Flexible columns clip instead of pushing. */
+  .report-table.table-fit { table-layout: fixed; }
   .report-table thead { background: var(--cream); }
   .report-table th {
     text-align: left;
@@ -251,13 +282,18 @@
   }
   .report-table th.th-wrap { white-space: normal; max-width: 180px; line-height: 1.3; }
   .report-table td {
-    padding: 12px;
+    padding: 12px 10px;
     border-bottom: 1px solid var(--line);
     color: var(--ink);
     vertical-align: middle;
+    /* Cells never wrap — the table scrolls instead. Wrapping gave rows uneven
+       heights, which is what made this table hard to scan when narrow. */
+    white-space: nowrap;
   }
   .report-table td.nowrap, .report-table td.mono { white-space: nowrap; }
-  .report-table td.muted { color: var(--ink-3); word-break: break-word; }
+  /* Email is the widest and least-scanned column: clip it, keep the full value on hover */
+  .report-table td.trunc { overflow: hidden; text-overflow: ellipsis; }
+  .report-table td.muted { color: var(--ink-3); }
   .report-table tbody tr:hover { background: var(--cream); }
   .report-table td.mono { font-family: 'JetBrains Mono', monospace; font-size: 13px; color: var(--ink-2); }
   .report-link { font-weight: 600; color: var(--sky-dark); cursor: pointer; }
@@ -482,6 +518,10 @@
         <i data-lucide="home" class="w-4 h-4 nav-icon"></i> <span class="flex-1">Home</span>
         <span class="nav-unlisted" style="display:none;"><i data-lucide="eye-off" class="w-3 h-3" title="Hidden — not published" style="color: var(--ink-3);"></i></span>
       </a>
+      <a class="nav-item flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium cursor-pointer" data-page="website-builder" data-site-page="Agenda">
+        <i data-lucide="calendar-days" class="w-4 h-4 nav-icon"></i> <span class="flex-1">Agenda</span>
+        <span class="nav-unlisted" style="display:none;"><i data-lucide="eye-off" class="w-3 h-3" title="Hidden — not published" style="color: var(--ink-3);"></i></span>
+      </a>
       <a class="nav-item flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium cursor-pointer" data-page="website-builder" data-site-page="Travel & Hotel">
         <i data-lucide="map-pin" class="w-4 h-4 nav-icon"></i> <span class="flex-1">Travel &amp; Hotel</span>
         <span class="nav-unlisted" style="display:none;"><i data-lucide="eye-off" class="w-3 h-3" title="Hidden — not published" style="color: var(--ink-3);"></i></span>
@@ -522,6 +562,9 @@
       <div class="section-label px-3 py-2 pt-4">Organization</div>
       <a class="nav-item flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium cursor-pointer" data-page="users">
         <i data-lucide="shield-check" class="w-4 h-4 nav-icon"></i> Users
+      </a>
+      <a class="nav-item flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium cursor-pointer" data-page="fields">
+        <i data-lucide="list-checks" class="w-4 h-4 nav-icon"></i> Fields
       </a>
 
     </nav>
@@ -589,7 +632,7 @@
               </div>
             </div>
             <div class="border-t pt-2 mt-2" style="border-color: var(--line);">
-              <button class="w-full text-left px-3 py-2 rounded-lg text-sm font-semibold flex items-center gap-2 hover:bg-stone-50" style="color: var(--gold-dark);">
+              <button onclick="openNewEvent(event)" class="w-full text-left px-3 py-2 rounded-lg text-sm font-semibold flex items-center gap-2 hover:bg-stone-50" style="color: var(--gold-dark);">
                 <i data-lucide="plus-circle" class="w-4 h-4"></i> Create new event
               </button>
             </div>
@@ -619,6 +662,7 @@
           <div class="section-label">People Invited</div>
           <div class="flex items-center justify-between mt-2">
             <div class="stat-num" style="font-size: 28px;">500 <span style="font-size: 16px; color: var(--ink-3);">/ 512</span></div>
+            <button onclick="exportParticipants('roster')" class="btn btn-outline text-xs" style="padding: 6px 10px;"><i data-lucide="download" class="w-3 h-3"></i> Export</button>
           </div>
           <div class="text-xs mt-1"><span class="font-semibold" style="color: var(--rose);">12 not invited</span> <span style="color: var(--ink-3);">from the roster</span></div>
         </div>
@@ -626,7 +670,7 @@
           <div class="section-label">Hotel Requested</div>
           <div class="flex items-center justify-between mt-2">
             <div class="stat-num" style="font-size: 28px; color: var(--gold-dark);">241</div>
-            <button class="btn btn-outline text-xs" style="padding: 6px 10px;"><i data-lucide="download" class="w-3 h-3"></i> Export</button>
+            <button onclick="exportParticipants('hotel')" class="btn btn-outline text-xs" style="padding: 6px 10px;"><i data-lucide="download" class="w-3 h-3"></i> Export</button>
           </div>
           <div class="text-xs mt-1" style="color: var(--ink-3);">of 284 attending in person</div>
         </div>
@@ -634,7 +678,7 @@
           <div class="section-label">Virtual Attendees</div>
           <div class="flex items-center justify-between mt-2">
             <div class="stat-num" style="font-size: 28px; color: var(--sky-dark);">63</div>
-            <button class="btn btn-outline text-xs" style="padding: 6px 10px;"><i data-lucide="download" class="w-3 h-3"></i> Export</button>
+            <button onclick="exportParticipants('virtual')" class="btn btn-outline text-xs" style="padding: 6px 10px;"><i data-lucide="download" class="w-3 h-3"></i> Export</button>
           </div>
           <div class="text-xs mt-1" style="color: var(--ink-3);">of 347 registered</div>
         </div>
@@ -642,7 +686,7 @@
           <div class="section-label">Dinner Requested</div>
           <div class="flex items-center justify-between mt-2">
             <div class="stat-num" style="font-size: 28px; color: var(--gold-dark);">271</div>
-            <button class="btn btn-outline text-xs" style="padding: 6px 10px;"><i data-lucide="download" class="w-3 h-3"></i> Export</button>
+            <button onclick="exportParticipants('dinner')" class="btn btn-outline text-xs" style="padding: 6px 10px;"><i data-lucide="download" class="w-3 h-3"></i> Export</button>
           </div>
           <div class="text-xs mt-1" style="color: var(--ink-3);">of 347 registered</div>
         </div>
@@ -663,7 +707,18 @@
           </div>
         </div>
         <div class="report-scroll overflow-x-auto">
-          <table class="report-table">
+          <table class="report-table table-fit">
+              <colgroup>
+                <col style="width: 34px;" />
+                <col style="width: 20%;" />
+                <col style="width: 22%;" />
+                <col style="width: 88px;" />
+                <col style="width: 22%;" />
+                <col style="width: 112px;" />
+                <col style="width: 62px;" />
+                <col style="width: 68px;" />
+                <col style="width: 92px;" />
+              </colgroup>
             <thead>
               <tr>
                 <th style="width: 32px;"><input type="checkbox" /></th>
@@ -680,10 +735,10 @@
             <tbody>
               <tr>
                 <td><input type="checkbox" /></td>
-                <td><span class="font-semibold">Abou-Assali, Aida</span></td>
-                <td class="muted">Aida.Abouassali@CereCore.net</td>
+                <td class="trunc" title="Abou-Assali, Aida"><span class="font-semibold">Abou-Assali, Aida</span></td>
+                <td class="muted trunc" title="Aida.Abouassali@CereCore.net">Aida.Abouassali@CereCore.net</td>
                 <td>AAB1204</td>
-                <td>MEDITECH Professional Svcs</td>
+                <td class="trunc" title="MEDITECH Professional Svcs">MEDITECH Professional Svcs</td>
                 <td><span class="pill pill-teal">In Person</span></td>
                 <td>Yes</td>
                 <td>Yes</td>
@@ -691,10 +746,10 @@
               </tr>
               <tr>
                 <td><input type="checkbox" /></td>
-                <td><span class="font-semibold">Adams, Brianna</span></td>
-                <td class="muted">Brianna.Eggett@MountainStarHealth.com</td>
+                <td class="trunc" title="Adams, Brianna"><span class="font-semibold">Adams, Brianna</span></td>
+                <td class="muted trunc" title="Brianna.Eggett@MountainStarHealth.com">Brianna.Eggett@MountainStarHealth.com</td>
                 <td>BEG2210</td>
-                <td>Epic</td>
+                <td class="trunc" title="Epic">Epic</td>
                 <td><span class="pill pill-teal">In Person</span></td>
                 <td>Yes</td>
                 <td>Yes</td>
@@ -702,10 +757,10 @@
               </tr>
               <tr>
                 <td><input type="checkbox" /></td>
-                <td><span class="font-semibold">Akalin-Paul, Ayfer</span></td>
-                <td class="muted">Ayfer.AkalinPaul@CereCore.net</td>
+                <td class="trunc" title="Akalin-Paul, Ayfer"><span class="font-semibold">Akalin-Paul, Ayfer</span></td>
+                <td class="muted trunc" title="Ayfer.AkalinPaul@CereCore.net">Ayfer.AkalinPaul@CereCore.net</td>
                 <td>AAK3312</td>
-                <td>MEDITECH</td>
+                <td class="trunc" title="MEDITECH">MEDITECH</td>
                 <td><span class="pill pill-sky">Virtual</span></td>
                 <td>No</td>
                 <td>No</td>
@@ -713,10 +768,10 @@
               </tr>
               <tr>
                 <td><input type="checkbox" /></td>
-                <td><span class="font-semibold">Akers, Mary</span></td>
-                <td class="muted">Mary.Akers@CereCore.net</td>
+                <td class="trunc" title="Akers, Mary"><span class="font-semibold">Akers, Mary</span></td>
+                <td class="muted trunc" title="Mary.Akers@CereCore.net">Mary.Akers@CereCore.net</td>
                 <td>MAK4418</td>
-                <td>Staffing Services</td>
+                <td class="trunc" title="Staffing Services">Staffing Services</td>
                 <td><span class="pill pill-sky">Virtual</span></td>
                 <td>No</td>
                 <td>No</td>
@@ -724,10 +779,10 @@
               </tr>
               <tr>
                 <td><input type="checkbox" /></td>
-                <td><span class="font-semibold">Albertson, Joan</span></td>
-                <td class="muted">Joan.Albertson@CereCore.net</td>
+                <td class="trunc" title="Albertson, Joan"><span class="font-semibold">Albertson, Joan</span></td>
+                <td class="muted trunc" title="Joan.Albertson@CereCore.net">Joan.Albertson@CereCore.net</td>
                 <td>JAL5521</td>
-                <td>Tier 2 Support Services</td>
+                <td class="trunc" title="Tier 2 Support Services">Tier 2 Support Services</td>
                 <td><span class="pill pill-teal">In Person</span></td>
                 <td>Yes</td>
                 <td>Yes</td>
@@ -735,10 +790,10 @@
               </tr>
               <tr>
                 <td><input type="checkbox" /></td>
-                <td><span class="font-semibold">Albrecht, Michael</span></td>
-                <td class="muted">Michael.Albrecht@CereCore.net</td>
+                <td class="trunc" title="Albrecht, Michael"><span class="font-semibold">Albrecht, Michael</span></td>
+                <td class="muted trunc" title="Michael.Albrecht@CereCore.net">Michael.Albrecht@CereCore.net</td>
                 <td>MAL6628</td>
-                <td>MEDITECH Consulting</td>
+                <td class="trunc" title="MEDITECH Consulting">MEDITECH Consulting</td>
                 <td><span class="pill pill-teal">In Person</span></td>
                 <td>Yes</td>
                 <td>No</td>
@@ -746,10 +801,10 @@
               </tr>
               <tr>
                 <td><input type="checkbox" /></td>
-                <td><span class="font-semibold">Albright, Adam</span></td>
-                <td class="muted">Adam.Albright@CereCore.net</td>
+                <td class="trunc" title="Albright, Adam"><span class="font-semibold">Albright, Adam</span></td>
+                <td class="muted trunc" title="Adam.Albright@CereCore.net">Adam.Albright@CereCore.net</td>
                 <td>AAL7734</td>
-                <td>Staffing Services</td>
+                <td class="trunc" title="Staffing Services">Staffing Services</td>
                 <td><span class="pill pill-teal">In Person</span></td>
                 <td>Yes</td>
                 <td>Yes</td>
@@ -757,10 +812,10 @@
               </tr>
               <tr>
                 <td><input type="checkbox" /></td>
-                <td><span class="font-semibold">Alldredge, Eagle</span></td>
-                <td class="muted">Eagle.Alldredge@CereCore.net</td>
+                <td class="trunc" title="Alldredge, Eagle"><span class="font-semibold">Alldredge, Eagle</span></td>
+                <td class="muted trunc" title="Eagle.Alldredge@CereCore.net">Eagle.Alldredge@CereCore.net</td>
                 <td>EAL8841</td>
-                <td>Tier 1 Support Services</td>
+                <td class="trunc" title="Tier 1 Support Services">Tier 1 Support Services</td>
                 <td><span class="pill pill-teal">In Person</span></td>
                 <td>Yes</td>
                 <td>Yes</td>
@@ -768,10 +823,10 @@
               </tr>
               <tr>
                 <td><input type="checkbox" /></td>
-                <td><span class="font-semibold">Amato, Benjamin</span></td>
-                <td class="muted">Benjamin.Amato@CereCore.net</td>
+                <td class="trunc" title="Amato, Benjamin"><span class="font-semibold">Amato, Benjamin</span></td>
+                <td class="muted trunc" title="Benjamin.Amato@CereCore.net">Benjamin.Amato@CereCore.net</td>
                 <td>BAM9948</td>
-                <td>Tier 1 Support Services</td>
+                <td class="trunc" title="Tier 1 Support Services">Tier 1 Support Services</td>
                 <td><span class="pill pill-ink">Invited</span></td>
                 <td>No</td>
                 <td>No</td>
@@ -779,10 +834,10 @@
               </tr>
               <tr>
                 <td><input type="checkbox" /></td>
-                <td><span class="font-semibold">Arakas, Jennifer</span></td>
-                <td class="muted">Jennifer.Arakas@CereCore.net</td>
+                <td class="trunc" title="Arakas, Jennifer"><span class="font-semibold">Arakas, Jennifer</span></td>
+                <td class="muted trunc" title="Jennifer.Arakas@CereCore.net">Jennifer.Arakas@CereCore.net</td>
                 <td>JAR1054</td>
-                <td>MEDITECH Professional Svcs</td>
+                <td class="trunc" title="MEDITECH Professional Svcs">MEDITECH Professional Svcs</td>
                 <td><span class="pill pill-teal">In Person</span></td>
                 <td>Yes</td>
                 <td>Yes</td>
@@ -790,10 +845,10 @@
               </tr>
               <tr>
                 <td><input type="checkbox" /></td>
-                <td><span class="font-semibold">Bacigalupi, Michael</span></td>
-                <td class="muted">Michael.Bacigalupi@CereCore.net</td>
+                <td class="trunc" title="Bacigalupi, Michael"><span class="font-semibold">Bacigalupi, Michael</span></td>
+                <td class="muted trunc" title="Michael.Bacigalupi@CereCore.net">Michael.Bacigalupi@CereCore.net</td>
                 <td>MBA1162</td>
-                <td>PMO</td>
+                <td class="trunc" title="PMO">PMO</td>
                 <td><span class="pill pill-ink">Invited</span></td>
                 <td>No</td>
                 <td>No</td>
@@ -801,10 +856,10 @@
               </tr>
               <tr>
                 <td><input type="checkbox" /></td>
-                <td><span class="font-semibold">Barker, Kerry</span></td>
-                <td class="muted">Kerry.Barker@CereCore.net</td>
+                <td class="trunc" title="Barker, Kerry"><span class="font-semibold">Barker, Kerry</span></td>
+                <td class="muted trunc" title="Kerry.Barker@CereCore.net">Kerry.Barker@CereCore.net</td>
                 <td>KBA1279</td>
-                <td>MEDITECH Consulting</td>
+                <td class="trunc" title="MEDITECH Consulting">MEDITECH Consulting</td>
                 <td><span class="pill pill-ink">Invited</span></td>
                 <td>No</td>
                 <td>No</td>
@@ -812,10 +867,10 @@
               </tr>
               <tr>
                 <td><input type="checkbox" /></td>
-                <td><span class="font-semibold">Bates, Angie</span></td>
-                <td class="muted">Angie.Bates@CereCore.net</td>
+                <td class="trunc" title="Bates, Angie"><span class="font-semibold">Bates, Angie</span></td>
+                <td class="muted trunc" title="Angie.Bates@CereCore.net">Angie.Bates@CereCore.net</td>
                 <td>ABA1386</td>
-                <td>Finance</td>
+                <td class="trunc" title="Finance">Finance</td>
                 <td><span class="pill pill-teal">In Person</span></td>
                 <td>No</td>
                 <td>Yes</td>
@@ -823,10 +878,10 @@
               </tr>
               <tr>
                 <td><input type="checkbox" /></td>
-                <td><span class="font-semibold">Batiste, Emily</span></td>
-                <td class="muted">Emily.Batiste@CereCore.net</td>
+                <td class="trunc" title="Batiste, Emily"><span class="font-semibold">Batiste, Emily</span></td>
+                <td class="muted trunc" title="Emily.Batiste@CereCore.net">Emily.Batiste@CereCore.net</td>
                 <td>EBA1493</td>
-                <td>Marketing</td>
+                <td class="trunc" title="Marketing">Marketing</td>
                 <td><span class="pill pill-teal">In Person</span></td>
                 <td>Yes</td>
                 <td>Yes</td>
@@ -834,10 +889,10 @@
               </tr>
               <tr>
                 <td><input type="checkbox" /></td>
-                <td><span class="font-semibold">Berger, Casey</span></td>
-                <td class="muted">Casey.Berger@CereCore.net</td>
+                <td class="trunc" title="Berger, Casey"><span class="font-semibold">Berger, Casey</span></td>
+                <td class="muted trunc" title="Casey.Berger@CereCore.net">Casey.Berger@CereCore.net</td>
                 <td>CBE1501</td>
-                <td>ServiceNow</td>
+                <td class="trunc" title="ServiceNow">ServiceNow</td>
                 <td><span class="pill pill-ink">Invited</span></td>
                 <td>No</td>
                 <td>No</td>
@@ -845,10 +900,10 @@
               </tr>
               <tr>
                 <td><input type="checkbox" /></td>
-                <td><span class="font-semibold">Brown, Pennie</span></td>
-                <td class="muted">Pennie.Brown@CereCore.net</td>
+                <td class="trunc" title="Brown, Pennie"><span class="font-semibold">Brown, Pennie</span></td>
+                <td class="muted trunc" title="Pennie.Brown@CereCore.net">Pennie.Brown@CereCore.net</td>
                 <td>PBR1618</td>
-                <td>Administration</td>
+                <td class="trunc" title="Administration">Administration</td>
                 <td><span class="pill pill-teal">In Person</span></td>
                 <td>Yes</td>
                 <td>Yes</td>
@@ -856,10 +911,10 @@
               </tr>
               <tr>
                 <td><input type="checkbox" /></td>
-                <td><span class="font-semibold">Bufalino, Chris</span></td>
-                <td class="muted">Chris.Bufalino@CereCore.net</td>
+                <td class="trunc" title="Bufalino, Chris"><span class="font-semibold">Bufalino, Chris</span></td>
+                <td class="muted trunc" title="Chris.Bufalino@CereCore.net">Chris.Bufalino@CereCore.net</td>
                 <td>CBU2119</td>
-                <td>Epic</td>
+                <td class="trunc" title="Epic">Epic</td>
                 <td><span class="pill pill-ink">Invited</span></td>
                 <td>No</td>
                 <td>No</td>
@@ -867,10 +922,10 @@
               </tr>
               <tr>
                 <td><input type="checkbox" /></td>
-                <td><span class="font-semibold">Castille, Josh</span></td>
-                <td class="muted">Josh.Castille@CereCore.net</td>
+                <td class="trunc" title="Castille, Josh"><span class="font-semibold">Castille, Josh</span></td>
+                <td class="muted trunc" title="Josh.Castille@CereCore.net">Josh.Castille@CereCore.net</td>
                 <td>JCA2226</td>
-                <td>Technology Managed Services</td>
+                <td class="trunc" title="Technology Managed Services">Technology Managed Services</td>
                 <td><span class="pill pill-rose">Not Invited</span></td>
                 <td>No</td>
                 <td>No</td>
@@ -878,10 +933,10 @@
               </tr>
               <tr>
                 <td><input type="checkbox" /></td>
-                <td><span class="font-semibold">Cole, Lisa</span></td>
-                <td class="muted">Lisa.Cole@CereCore.net</td>
+                <td class="trunc" title="Cole, Lisa"><span class="font-semibold">Cole, Lisa</span></td>
+                <td class="muted trunc" title="Lisa.Cole@CereCore.net">Lisa.Cole@CereCore.net</td>
                 <td>LCO2333</td>
-                <td>Strategic Consulting</td>
+                <td class="trunc" title="Strategic Consulting">Strategic Consulting</td>
                 <td><span class="pill pill-teal">In Person</span></td>
                 <td>No</td>
                 <td>Yes</td>
@@ -889,10 +944,10 @@
               </tr>
               <tr>
                 <td><input type="checkbox" /></td>
-                <td><span class="font-semibold">Cook, Deborah</span></td>
-                <td class="muted">Deborah.Cook@CereCore.net</td>
+                <td class="trunc" title="Cook, Deborah"><span class="font-semibold">Cook, Deborah</span></td>
+                <td class="muted trunc" title="Deborah.Cook@CereCore.net">Deborah.Cook@CereCore.net</td>
                 <td>DCO2441</td>
-                <td>Tier 2 Support Services</td>
+                <td class="trunc" title="Tier 2 Support Services">Tier 2 Support Services</td>
                 <td><span class="pill pill-teal">In Person</span></td>
                 <td>Yes</td>
                 <td>Yes</td>
@@ -900,10 +955,10 @@
               </tr>
               <tr>
                 <td><input type="checkbox" /></td>
-                <td><span class="font-semibold">Cranford, Wendy</span></td>
-                <td class="muted">Wendy.Cranford@CereCore.net</td>
+                <td class="trunc" title="Cranford, Wendy"><span class="font-semibold">Cranford, Wendy</span></td>
+                <td class="muted trunc" title="Wendy.Cranford@CereCore.net">Wendy.Cranford@CereCore.net</td>
                 <td>WCR3327</td>
-                <td>Staffing Services</td>
+                <td class="trunc" title="Staffing Services">Staffing Services</td>
                 <td><span class="pill pill-teal">In Person</span></td>
                 <td>Yes</td>
                 <td>Yes</td>
@@ -911,10 +966,10 @@
               </tr>
               <tr>
                 <td><input type="checkbox" /></td>
-                <td><span class="font-semibold">Palakie, Daphne</span></td>
-                <td class="muted">Daphne.Palakie@CereCore.net</td>
+                <td class="trunc" title="Palakie, Daphne"><span class="font-semibold">Palakie, Daphne</span></td>
+                <td class="muted trunc" title="Daphne.Palakie@CereCore.net">Daphne.Palakie@CereCore.net</td>
                 <td>DPA4432</td>
-                <td>Managed Services Admin</td>
+                <td class="trunc" title="Managed Services Admin">Managed Services Admin</td>
                 <td><span class="pill pill-rose">Not Invited</span></td>
                 <td>No</td>
                 <td>No</td>
@@ -922,10 +977,10 @@
               </tr>
               <tr>
                 <td><input type="checkbox" /></td>
-                <td><span class="font-semibold">Potter, Caleb</span></td>
-                <td class="muted">Caleb.Potter@CereCore.net</td>
+                <td class="trunc" title="Potter, Caleb"><span class="font-semibold">Potter, Caleb</span></td>
+                <td class="muted trunc" title="Caleb.Potter@CereCore.net">Caleb.Potter@CereCore.net</td>
                 <td>CPO5548</td>
-                <td>Tier 1 Support Services</td>
+                <td class="trunc" title="Tier 1 Support Services">Tier 1 Support Services</td>
                 <td><span class="pill pill-ink">Invited</span></td>
                 <td>No</td>
                 <td>No</td>
@@ -933,10 +988,10 @@
               </tr>
               <tr>
                 <td><input type="checkbox" /></td>
-                <td><span class="font-semibold">Self, Tiffany</span></td>
-                <td class="muted">Tiffany.Self@CereCore.net</td>
+                <td class="trunc" title="Self, Tiffany"><span class="font-semibold">Self, Tiffany</span></td>
+                <td class="muted trunc" title="Tiffany.Self@CereCore.net">Tiffany.Self@CereCore.net</td>
                 <td>TSE6654</td>
-                <td>PMO</td>
+                <td class="trunc" title="PMO">PMO</td>
                 <td><span class="pill pill-ink" style="color: var(--ink-3);">Declined</span></td>
                 <td>No</td>
                 <td>No</td>
@@ -944,10 +999,10 @@
               </tr>
               <tr>
                 <td><input type="checkbox" /></td>
-                <td><span class="font-semibold">Whitworth, Zach</span></td>
-                <td class="muted">Zach.Whitworth@CereCore.net</td>
+                <td class="trunc" title="Whitworth, Zach"><span class="font-semibold">Whitworth, Zach</span></td>
+                <td class="muted trunc" title="Zach.Whitworth@CereCore.net">Zach.Whitworth@CereCore.net</td>
                 <td>ZWH7761</td>
-                <td>MEDITECH</td>
+                <td class="trunc" title="MEDITECH">MEDITECH</td>
                 <td><span class="pill pill-teal">In Person</span></td>
                 <td>Yes</td>
                 <td>Yes</td>
@@ -1002,7 +1057,7 @@
               </div>
               <div class="rf-field" style="margin-bottom: 0;">
                 <label class="rf-label">Manager</label>
-                <select id="pe-mgr" class="rf-select"><option>Alldredge, Eagle</option><option>Arakas, Jennifer</option><option>Bacigalupi, Michael</option><option>Barker, Kerry</option><option>Bates, Angie</option></select>
+                <select id="pe-mgr" class="rf-select"><option>Alldredge, Eagle</option><option>Arakas, Jennifer</option><option>Bacigalupi, Michael</option><option>Barker, Kerry</option><option>Bates, Angie</option><option>Batiste, Emily</option><option>Berger, Casey</option><option>Brown, Pennie</option><option>Bufalino, Chris</option><option>Castille, Josh</option><option>Cole, Lisa</option><option>Cook, Deborah</option><option>Corner, Andrea</option><option>Cox, Kristin</option><option>Cranford, Wendy</option><option>DeGroff, Doreen</option><option>Dean, Mike</option><option>Demeraski, Jennifer</option><option>Dennis, Melanie</option><option>Dow, Devon</option><option>Dunaway, Joshua</option><option>Efird, lll Treece</option><option>Eitniear, Nathan Felts Josh</option><option>Fitisemanu, Jennifer</option><option>Flint, Patrick</option><option>Freeze, Brigham</option><option>Garza, Ismelda</option><option>Godwin, Renee</option><option>Greenfield, Nick</option><option>Grgich, Veronica</option><option>Grieshop, Zach</option><option>Grinnip, Joe</option><option>Gronberg, Bob</option><option>Groves, Chuck</option><option>Hall, Adam</option><option>Hine, Andrew</option><option>Holder, Sam</option><option>Hutcheson, Derrol</option><option>Jackman, Jeremy</option><option>Jacobs, Stephen</option><option>Jamison, Jennifer</option><option>Janetvilay, Bounthavy</option><option>Joyce, Paul</option><option>Kindred, Kelli</option><option>King, Morgan</option><option>Knight, Tanya</option><option>Koske, Nathan</option><option>Lamasters, Julie</option><option>Lane, Amanda</option><option>Love, Steve</option><option>McCollum, Craig</option><option>McInnis, Samantha</option><option>Messer, Sarah</option><option>Mills, Alex</option><option>Momon, Cassandra</option><option>Morgado, Derrick</option><option>Murray, Stephanie</option><option>Naugle, Kevin</option><option>Nickoson, Staci</option><option>O'Dell, Matt</option><option>Palakie, Daphne</option><option>Palakie, Tom</option><option>Paulus, Jaime</option><option>Perry, Jeremy</option><option>Phillips, Shannon</option><option>Porter, Donna</option><option>Potter, Caleb</option><option>Potter, Michael</option><option>Price, James</option><option>Ray, Jennifer</option><option>Read, Rhonda</option><option>Robinson, Darren</option><option>Ryan, Michael</option><option>Ryan, Scott</option><option>Scott, Michelle</option><option>Self, Tiffany</option><option>Shriner, Connie</option><option>Shriner, Stephen</option><option>Simonis, Miller Ashley</option><option>Singleton, Carrie</option><option>Sobol, Phil</option><option>Stefanski, Gail</option><option>Stucka, Kerry</option><option>Talbot, Jared</option><option>Trevisano, Matthew</option><option>Trupiano, Brian</option><option>Vaden, Angela</option><option>Walker-Collier, Robert</option><option>Walsh, John</option><option>Watkins, Curtis</option><option>West, Tommy</option><option>Whitworth, Zach</option><option>Wickersham, Chris</option><option>Wilkerson, Bekah</option><option>Ybarbo, Maribel</option><option>Zand, Peyman</option></select>
               </div>
             </div>
 
@@ -1197,12 +1252,20 @@
                 <div class="relative flex" style="align-self: stretch;">
                   <button onclick="rfToggleMenu(event)" class="btn btn-outline text-xs" style="padding: 6px 10px; height: 100%;" title="More options"><i data-lucide="more-horizontal" class="w-3.5 h-3.5"></i></button>
                   <div id="rf-more-menu" class="hidden absolute right-0 top-full mt-2 card p-2 z-30" style="width: 250px; box-shadow: 0 16px 40px -12px rgba(28,25,23,0.25);">
-                    <div class="section-label px-2 py-1.5">Registration</div>
-                    <label class="flex items-center justify-between gap-3 px-2 py-2 rounded-lg cursor-pointer hover:bg-stone-50">
-                      <span class="text-sm">Registration open</span>
-                      <span class="w-9 h-5 rounded-full flex items-center px-0.5 shrink-0" style="background: var(--gold);"><span class="w-4 h-4 rounded-full bg-white ml-auto"></span></span>
+                    <div class="section-label px-2 py-1.5">Page status</div>
+                    <label onclick="rfPublishToggle(event)" class="flex items-center justify-between gap-3 px-2 py-2 rounded-lg cursor-pointer hover:bg-stone-50">
+                      <span class="text-sm">Published</span>
+                      <span id="rf-pub-toggle" class="w-9 h-5 rounded-full flex items-center px-0.5 shrink-0" style="background: var(--gold);"><span class="w-4 h-4 rounded-full bg-white ml-auto"></span></span>
                     </label>
-                    <p class="text-xs px-2 pb-2" style="color: var(--ink-3);">Closing registration hides this page from the site navigation.</p>
+                    <p class="text-xs px-2 pb-2" id="rf-pub-note" style="color: var(--ink-3);">Live on the site, reached from the Register button in the header. Unpublish to close registration.</p>
+                    <div class="border-t pt-2 mt-1" style="border-color: var(--line);">
+                      <div class="section-label px-2 pb-1.5">Hotel requests</div>
+                      <label onclick="rfHotelToggle(event)" class="flex items-center justify-between gap-3 px-2 py-2 rounded-lg cursor-pointer hover:bg-stone-50">
+                        <span class="text-sm">Accepting hotel requests</span>
+                        <span id="rf-hotel-toggle" class="w-9 h-5 rounded-full flex items-center px-0.5 shrink-0" style="background: var(--gold);"><span class="w-4 h-4 rounded-full bg-white ml-auto"></span></span>
+                      </label>
+                      <p class="text-xs px-2 pb-2" id="rf-hotel-note" style="color: var(--ink-3);">Turn this off at the hotel's cutoff. Registration stays open &mdash; only the hotel questions lock.</p>
+                    </div>
                     <div class="border-t pt-1 mt-1" style="border-color: var(--line);">
                       <button class="w-full text-left px-2 py-2 rounded-lg text-sm flex items-center gap-2 hover:bg-stone-50"><i data-lucide="external-link" class="w-3.5 h-3.5" style="color: var(--ink-3);"></i> View live page</button>
                     </div>
@@ -1233,9 +1296,16 @@
                   </div>
                 </div>
 
-                <div class="rf-field">
-                  <label class="rf-label"><span class="rf-req">*</span>Work email</label>
-                  <input class="rf-input" value="Tony.Bills@CereCore.net" />
+                <div class="grid grid-cols-2 gap-4">
+                  <div class="rf-field">
+                    <label class="rf-label"><span class="rf-req">*</span>Work email</label>
+                    <input class="rf-input" value="Tony.Bills@CereCore.net" />
+                  </div>
+                  <div class="rf-field">
+                    <label class="rf-label"><span class="rf-req">*</span>3/4 ID</label>
+                    <input class="rf-input" placeholder="ABC1234" />
+                    <div class="rf-help">Three letters and four numbers, the same ID you sign in with.</div>
+                  </div>
                 </div>
 
                 <div class="rf-field">
@@ -1246,7 +1316,7 @@
 
                 <div class="rf-field">
                   <label class="rf-label"><span class="rf-req">*</span>Who is your manager?</label>
-                  <select class="rf-select"><option>Select&hellip;</option><option>Alldredge, Eagle</option><option>Arakas, Jennifer</option><option>Bacigalupi, Michael</option><option>Barker, Kerry</option><option>Bates, Angie</option></select>
+                  <select class="rf-select"><option>Select&hellip;</option><option>Alldredge, Eagle</option><option>Arakas, Jennifer</option><option>Bacigalupi, Michael</option><option>Barker, Kerry</option><option>Bates, Angie</option><option>Batiste, Emily</option><option>Berger, Casey</option><option>Brown, Pennie</option><option>Bufalino, Chris</option><option>Castille, Josh</option><option>Cole, Lisa</option><option>Cook, Deborah</option><option>Corner, Andrea</option><option>Cox, Kristin</option><option>Cranford, Wendy</option><option>DeGroff, Doreen</option><option>Dean, Mike</option><option>Demeraski, Jennifer</option><option>Dennis, Melanie</option><option>Dow, Devon</option><option>Dunaway, Joshua</option><option>Efird, lll Treece</option><option>Eitniear, Nathan Felts Josh</option><option>Fitisemanu, Jennifer</option><option>Flint, Patrick</option><option>Freeze, Brigham</option><option>Garza, Ismelda</option><option>Godwin, Renee</option><option>Greenfield, Nick</option><option>Grgich, Veronica</option><option>Grieshop, Zach</option><option>Grinnip, Joe</option><option>Gronberg, Bob</option><option>Groves, Chuck</option><option>Hall, Adam</option><option>Hine, Andrew</option><option>Holder, Sam</option><option>Hutcheson, Derrol</option><option>Jackman, Jeremy</option><option>Jacobs, Stephen</option><option>Jamison, Jennifer</option><option>Janetvilay, Bounthavy</option><option>Joyce, Paul</option><option>Kindred, Kelli</option><option>King, Morgan</option><option>Knight, Tanya</option><option>Koske, Nathan</option><option>Lamasters, Julie</option><option>Lane, Amanda</option><option>Love, Steve</option><option>McCollum, Craig</option><option>McInnis, Samantha</option><option>Messer, Sarah</option><option>Mills, Alex</option><option>Momon, Cassandra</option><option>Morgado, Derrick</option><option>Murray, Stephanie</option><option>Naugle, Kevin</option><option>Nickoson, Staci</option><option>O'Dell, Matt</option><option>Palakie, Daphne</option><option>Palakie, Tom</option><option>Paulus, Jaime</option><option>Perry, Jeremy</option><option>Phillips, Shannon</option><option>Porter, Donna</option><option>Potter, Caleb</option><option>Potter, Michael</option><option>Price, James</option><option>Ray, Jennifer</option><option>Read, Rhonda</option><option>Robinson, Darren</option><option>Ryan, Michael</option><option>Ryan, Scott</option><option>Scott, Michelle</option><option>Self, Tiffany</option><option>Shriner, Connie</option><option>Shriner, Stephen</option><option>Simonis, Miller Ashley</option><option>Singleton, Carrie</option><option>Sobol, Phil</option><option>Stefanski, Gail</option><option>Stucka, Kerry</option><option>Talbot, Jared</option><option>Trevisano, Matthew</option><option>Trupiano, Brian</option><option>Vaden, Angela</option><option>Walker-Collier, Robert</option><option>Walsh, John</option><option>Watkins, Curtis</option><option>West, Tommy</option><option>Whitworth, Zach</option><option>Wickersham, Chris</option><option>Wilkerson, Bekah</option><option>Ybarbo, Maribel</option><option>Zand, Peyman</option></select>
                   
                 </div>
 
@@ -1287,6 +1357,10 @@
               <div class="rf-step" data-inperson>
                 <div class="rf-steptitle">Hotel reservation</div>
                 <div class="rf-stepnote">Shown to in-person registrants only.</div>
+                <div id="rf-hotel-closed" class="hidden p-3 rounded-xl mt-3 mb-6 flex items-start gap-2.5 text-sm" style="background: var(--amber-soft); color: #92400e;">
+                  <i data-lucide="lock" class="w-4 h-4 shrink-0 mt-0.5"></i>
+                  <span><b>Hotel requests are closed.</b> The room block is no longer taking reservations through this form. To book a room, call the hotel directly and let your manager know.</span>
+                </div>
 
                 <div class="rf-field">
                   <label class="rf-label"><span class="rf-req">*</span>Please tell us what nights you need reserved in the room block.</label>
@@ -1473,6 +1547,53 @@
               </div>
             </div>
           </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- =================== PARTICIPANTS — EMPTY (new event) =================== -->
+    <section class="page p-8" id="page-invitees-empty">
+      <div class="mb-6 flex items-end justify-between flex-wrap gap-3">
+        <h1 class="font-display text-4xl font-semibold">Participants</h1>
+        <div class="flex gap-2">
+          <button class="btn btn-outline"><i data-lucide="upload" class="w-4 h-4"></i> Import</button>
+          <button class="btn btn-brand"><i data-lucide="user-plus" class="w-4 h-4"></i> Add</button>
+        </div>
+      </div>
+
+      <div class="grid grid-cols-4 gap-4 mb-6">
+        <div class="card p-4"><div class="section-label">People Invited</div>
+          <div class="stat-num mt-2" style="font-size: 28px; color: var(--ink-3);">0 <span style="font-size: 16px;">/ 0</span></div>
+          <div class="text-xs mt-1" style="color: var(--ink-3);">no roster yet</div></div>
+        <div class="card p-4"><div class="section-label">Hotel Requested</div>
+          <div class="stat-num mt-2" style="font-size: 28px; color: var(--ink-3);">0</div>
+          <div class="text-xs mt-1" style="color: var(--ink-3);">once people register</div></div>
+        <div class="card p-4"><div class="section-label">Virtual Attendees</div>
+          <div class="stat-num mt-2" style="font-size: 28px; color: var(--ink-3);">0</div>
+          <div class="text-xs mt-1" style="color: var(--ink-3);">once people register</div></div>
+        <div class="card p-4"><div class="section-label">Dinner Requested</div>
+          <div class="stat-num mt-2" style="font-size: 28px; color: var(--ink-3);">0</div>
+          <div class="text-xs mt-1" style="color: var(--ink-3);">once people register</div></div>
+      </div>
+
+      <div class="card p-6">
+        <div class="empty-state">
+          <div class="empty-icon"><i data-lucide="users" class="w-7 h-7"></i></div>
+          <h3 class="font-display text-xl font-semibold">Start with your roster</h3>
+          <p>Import the HR spreadsheet to fill this event with people. Four columns: first name, last name, email address, 3/4 ID.</p>
+          <div class="flex gap-2 justify-center mt-5">
+            <button class="btn btn-brand"><i data-lucide="upload" class="w-4 h-4"></i> Import a roster</button>
+            <button class="btn btn-outline"><i data-lucide="user-plus" class="w-4 h-4"></i> Add one person</button>
+          </div>
+          <p class="empty-foot">Importing doesn't invite anyone &mdash; you send invitations when you're ready.</p>
+        </div>
+      </div>
+
+      <div class="card p-6 mt-6">
+        <div class="section-label mb-3">Carried over from Connection 2027</div>
+        <div class="grid grid-cols-2 gap-4">
+          <div class="ready-item"><i data-lucide="layout-template" class="w-4 h-4"></i><div><b>7 website pages</b><span>copy and publish settings intact</span></div></div>
+          <div class="ready-item"><i data-lucide="mail" class="w-4 h-4"></i><div><b>5 email templates</b><span>ready to reword</span></div></div>
         </div>
       </div>
     </section>
@@ -1886,6 +2007,9 @@
                     </dl>
 
                     <div class="mr-sec" data-mrinperson>Hotel</div>
+                    <div id="mr-hotel-closed" class="hidden" data-mrinperson style="padding: 12px 22px; border-top: 1px solid var(--line); background: var(--amber-soft); color: #92400e; font-size: 13px;">
+                      <b>Hotel changes are closed.</b> Call the hotel directly to change or cancel this reservation, and let your manager know.
+                    </div>
                     <dl class="mr-dl" data-mrinperson>
                       <div class="mr-row"><dt>Hotel</dt><dd>Sonesta Nashville Airport</dd></div>
                       <div class="mr-row"><dt>Check in</dt><dd>Tuesday, January 12, 2027</dd></div>
@@ -2315,6 +2439,185 @@
 
     </section>
 
+    <!-- =================== FIELDS =================== -->
+    <section class="page p-8" id="page-fields">
+      <div class="mb-6 flex items-end justify-between flex-wrap gap-3">
+        <div class="flex items-center gap-2">
+          <h1 class="font-display text-4xl font-semibold">Fields</h1>
+          <span class="tip" tabindex="0" aria-label="The options people choose from when they register.">
+            <i data-lucide="info" class="w-4 h-4"></i>
+            <span class="tip-bubble">The options people choose from when they register.</span>
+          </span>
+        </div>
+      </div>
+
+      <div class="flex flex-col gap-6">
+        <div class="card overflow-hidden">
+          <button class="fld-head" onclick="fieldToggle('dept')" aria-expanded="false" aria-controls="fld-dept-body">
+            <i data-lucide="chevron-down" class="w-4 h-4 fld-chev fld-chev-closed" style="color: var(--ink-3);"></i>
+            <h3 class="font-display text-xl font-semibold">Departments</h3>
+            <span class="fld-count" id="fld-dept-count">19</span>
+          </button>
+          <div class="fld-body hidden" id="fld-dept-body">
+            <div class="flex items-center justify-between gap-3 mb-3 flex-wrap">
+              <div class="flex items-center gap-2 px-3 rounded-lg" style="background: white; border: 1px solid var(--line);">
+                <i data-lucide="search" class="w-3.5 h-3.5 shrink-0" style="color: var(--ink-3);"></i>
+                <input type="text" placeholder="Search&hellip;" class="text-sm bg-transparent outline-none w-48 py-2" oninput="fieldSearch('dept', this.value)" />
+              </div>
+              <button onclick="fieldAdd('dept')" class="btn btn-outline text-xs"><i data-lucide="plus" class="w-3.5 h-3.5"></i> Add department</button>
+            </div>
+            <div class="fld-new hidden" id="fld-dept-new">
+              <input type="text" class="rf-input" placeholder="New department" onkeydown="if(event.key==='Enter') fieldCommit('dept'); if(event.key==='Escape') fieldCancel('dept');" />
+              <button onclick="fieldCommit('dept')" class="btn btn-brand text-xs shrink-0">Add</button>
+              <button onclick="fieldCancel('dept')" class="btn btn-ghost text-xs shrink-0">Cancel</button>
+            </div>
+            <div class="fld-list" id="fld-dept-list">
+                <div class="fld-row"><span>Administration</span><button onclick="fieldRemove(this)" title="Remove Administration"><i data-lucide="x" class="w-3.5 h-3.5"></i></button></div>
+                <div class="fld-row"><span>Epic</span><button onclick="fieldRemove(this)" title="Remove Epic"><i data-lucide="x" class="w-3.5 h-3.5"></i></button></div>
+                <div class="fld-row"><span>Finance</span><button onclick="fieldRemove(this)" title="Remove Finance"><i data-lucide="x" class="w-3.5 h-3.5"></i></button></div>
+                <div class="fld-row"><span>Managed Services Admin</span><button onclick="fieldRemove(this)" title="Remove Managed Services Admin"><i data-lucide="x" class="w-3.5 h-3.5"></i></button></div>
+                <div class="fld-row"><span>Marketing</span><button onclick="fieldRemove(this)" title="Remove Marketing"><i data-lucide="x" class="w-3.5 h-3.5"></i></button></div>
+                <div class="fld-row"><span>MEDITECH</span><button onclick="fieldRemove(this)" title="Remove MEDITECH"><i data-lucide="x" class="w-3.5 h-3.5"></i></button></div>
+                <div class="fld-row"><span>MEDITECH Consulting</span><button onclick="fieldRemove(this)" title="Remove MEDITECH Consulting"><i data-lucide="x" class="w-3.5 h-3.5"></i></button></div>
+                <div class="fld-row"><span>MEDITECH Professional Svcs</span><button onclick="fieldRemove(this)" title="Remove MEDITECH Professional Svcs"><i data-lucide="x" class="w-3.5 h-3.5"></i></button></div>
+                <div class="fld-row"><span>PMO</span><button onclick="fieldRemove(this)" title="Remove PMO"><i data-lucide="x" class="w-3.5 h-3.5"></i></button></div>
+                <div class="fld-row"><span>Sales</span><button onclick="fieldRemove(this)" title="Remove Sales"><i data-lucide="x" class="w-3.5 h-3.5"></i></button></div>
+                <div class="fld-row"><span>ServiceNow</span><button onclick="fieldRemove(this)" title="Remove ServiceNow"><i data-lucide="x" class="w-3.5 h-3.5"></i></button></div>
+                <div class="fld-row"><span>Staff Aug Non-HCA</span><button onclick="fieldRemove(this)" title="Remove Staff Aug Non-HCA"><i data-lucide="x" class="w-3.5 h-3.5"></i></button></div>
+                <div class="fld-row"><span>Staffing Services</span><button onclick="fieldRemove(this)" title="Remove Staffing Services"><i data-lucide="x" class="w-3.5 h-3.5"></i></button></div>
+                <div class="fld-row"><span>Strategic Consulting</span><button onclick="fieldRemove(this)" title="Remove Strategic Consulting"><i data-lucide="x" class="w-3.5 h-3.5"></i></button></div>
+                <div class="fld-row"><span>Technology Managed Services</span><button onclick="fieldRemove(this)" title="Remove Technology Managed Services"><i data-lucide="x" class="w-3.5 h-3.5"></i></button></div>
+                <div class="fld-row"><span>Technology Consulting Services</span><button onclick="fieldRemove(this)" title="Remove Technology Consulting Services"><i data-lucide="x" class="w-3.5 h-3.5"></i></button></div>
+                <div class="fld-row"><span>Tech Engineering Services</span><button onclick="fieldRemove(this)" title="Remove Tech Engineering Services"><i data-lucide="x" class="w-3.5 h-3.5"></i></button></div>
+                <div class="fld-row"><span>Tier 1 Support Services</span><button onclick="fieldRemove(this)" title="Remove Tier 1 Support Services"><i data-lucide="x" class="w-3.5 h-3.5"></i></button></div>
+                <div class="fld-row"><span>Tier 2 Support Services</span><button onclick="fieldRemove(this)" title="Remove Tier 2 Support Services"><i data-lucide="x" class="w-3.5 h-3.5"></i></button></div>
+            </div>
+            <p class="fld-empty hidden" id="fld-dept-empty">Nothing matches that search.</p>
+          </div>
+        </div>
+        <div class="card overflow-hidden">
+          <button class="fld-head" onclick="fieldToggle('mgr')" aria-expanded="false" aria-controls="fld-mgr-body">
+            <i data-lucide="chevron-down" class="w-4 h-4 fld-chev fld-chev-closed" style="color: var(--ink-3);"></i>
+            <h3 class="font-display text-xl font-semibold">Managers</h3>
+            <span class="fld-count" id="fld-mgr-count">96</span>
+          </button>
+          <div class="fld-body hidden" id="fld-mgr-body">
+            <div class="flex items-center justify-between gap-3 mb-3 flex-wrap">
+              <div class="flex items-center gap-2 px-3 rounded-lg" style="background: white; border: 1px solid var(--line);">
+                <i data-lucide="search" class="w-3.5 h-3.5 shrink-0" style="color: var(--ink-3);"></i>
+                <input type="text" placeholder="Search&hellip;" class="text-sm bg-transparent outline-none w-48 py-2" oninput="fieldSearch('mgr', this.value)" />
+              </div>
+              <button onclick="fieldAdd('mgr')" class="btn btn-outline text-xs"><i data-lucide="plus" class="w-3.5 h-3.5"></i> Add manager</button>
+            </div>
+            <div class="fld-new hidden" id="fld-mgr-new">
+              <input type="text" class="rf-input" placeholder="New manager" onkeydown="if(event.key==='Enter') fieldCommit('mgr'); if(event.key==='Escape') fieldCancel('mgr');" />
+              <button onclick="fieldCommit('mgr')" class="btn btn-brand text-xs shrink-0">Add</button>
+              <button onclick="fieldCancel('mgr')" class="btn btn-ghost text-xs shrink-0">Cancel</button>
+            </div>
+            <div class="fld-list" id="fld-mgr-list">
+                <div class="fld-row"><span>Alldredge, Eagle</span><button onclick="fieldRemove(this)" title="Remove Alldredge, Eagle"><i data-lucide="x" class="w-3.5 h-3.5"></i></button></div>
+                <div class="fld-row"><span>Arakas, Jennifer</span><button onclick="fieldRemove(this)" title="Remove Arakas, Jennifer"><i data-lucide="x" class="w-3.5 h-3.5"></i></button></div>
+                <div class="fld-row"><span>Bacigalupi, Michael</span><button onclick="fieldRemove(this)" title="Remove Bacigalupi, Michael"><i data-lucide="x" class="w-3.5 h-3.5"></i></button></div>
+                <div class="fld-row"><span>Barker, Kerry</span><button onclick="fieldRemove(this)" title="Remove Barker, Kerry"><i data-lucide="x" class="w-3.5 h-3.5"></i></button></div>
+                <div class="fld-row"><span>Bates, Angie</span><button onclick="fieldRemove(this)" title="Remove Bates, Angie"><i data-lucide="x" class="w-3.5 h-3.5"></i></button></div>
+                <div class="fld-row"><span>Batiste, Emily</span><button onclick="fieldRemove(this)" title="Remove Batiste, Emily"><i data-lucide="x" class="w-3.5 h-3.5"></i></button></div>
+                <div class="fld-row"><span>Berger, Casey</span><button onclick="fieldRemove(this)" title="Remove Berger, Casey"><i data-lucide="x" class="w-3.5 h-3.5"></i></button></div>
+                <div class="fld-row"><span>Brown, Pennie</span><button onclick="fieldRemove(this)" title="Remove Brown, Pennie"><i data-lucide="x" class="w-3.5 h-3.5"></i></button></div>
+                <div class="fld-row"><span>Bufalino, Chris</span><button onclick="fieldRemove(this)" title="Remove Bufalino, Chris"><i data-lucide="x" class="w-3.5 h-3.5"></i></button></div>
+                <div class="fld-row"><span>Castille, Josh</span><button onclick="fieldRemove(this)" title="Remove Castille, Josh"><i data-lucide="x" class="w-3.5 h-3.5"></i></button></div>
+                <div class="fld-row"><span>Cole, Lisa</span><button onclick="fieldRemove(this)" title="Remove Cole, Lisa"><i data-lucide="x" class="w-3.5 h-3.5"></i></button></div>
+                <div class="fld-row"><span>Cook, Deborah</span><button onclick="fieldRemove(this)" title="Remove Cook, Deborah"><i data-lucide="x" class="w-3.5 h-3.5"></i></button></div>
+                <div class="fld-row"><span>Corner, Andrea</span><button onclick="fieldRemove(this)" title="Remove Corner, Andrea"><i data-lucide="x" class="w-3.5 h-3.5"></i></button></div>
+                <div class="fld-row"><span>Cox, Kristin</span><button onclick="fieldRemove(this)" title="Remove Cox, Kristin"><i data-lucide="x" class="w-3.5 h-3.5"></i></button></div>
+                <div class="fld-row"><span>Cranford, Wendy</span><button onclick="fieldRemove(this)" title="Remove Cranford, Wendy"><i data-lucide="x" class="w-3.5 h-3.5"></i></button></div>
+                <div class="fld-row"><span>DeGroff, Doreen</span><button onclick="fieldRemove(this)" title="Remove DeGroff, Doreen"><i data-lucide="x" class="w-3.5 h-3.5"></i></button></div>
+                <div class="fld-row"><span>Dean, Mike</span><button onclick="fieldRemove(this)" title="Remove Dean, Mike"><i data-lucide="x" class="w-3.5 h-3.5"></i></button></div>
+                <div class="fld-row"><span>Demeraski, Jennifer</span><button onclick="fieldRemove(this)" title="Remove Demeraski, Jennifer"><i data-lucide="x" class="w-3.5 h-3.5"></i></button></div>
+                <div class="fld-row"><span>Dennis, Melanie</span><button onclick="fieldRemove(this)" title="Remove Dennis, Melanie"><i data-lucide="x" class="w-3.5 h-3.5"></i></button></div>
+                <div class="fld-row"><span>Dow, Devon</span><button onclick="fieldRemove(this)" title="Remove Dow, Devon"><i data-lucide="x" class="w-3.5 h-3.5"></i></button></div>
+                <div class="fld-row"><span>Dunaway, Joshua</span><button onclick="fieldRemove(this)" title="Remove Dunaway, Joshua"><i data-lucide="x" class="w-3.5 h-3.5"></i></button></div>
+                <div class="fld-row"><span>Efird, lll Treece</span><button onclick="fieldRemove(this)" title="Remove Efird, lll Treece"><i data-lucide="x" class="w-3.5 h-3.5"></i></button></div>
+                <div class="fld-row"><span>Eitniear, Nathan Felts Josh</span><button onclick="fieldRemove(this)" title="Remove Eitniear, Nathan Felts Josh"><i data-lucide="x" class="w-3.5 h-3.5"></i></button></div>
+                <div class="fld-row"><span>Fitisemanu, Jennifer</span><button onclick="fieldRemove(this)" title="Remove Fitisemanu, Jennifer"><i data-lucide="x" class="w-3.5 h-3.5"></i></button></div>
+                <div class="fld-row"><span>Flint, Patrick</span><button onclick="fieldRemove(this)" title="Remove Flint, Patrick"><i data-lucide="x" class="w-3.5 h-3.5"></i></button></div>
+                <div class="fld-row"><span>Freeze, Brigham</span><button onclick="fieldRemove(this)" title="Remove Freeze, Brigham"><i data-lucide="x" class="w-3.5 h-3.5"></i></button></div>
+                <div class="fld-row"><span>Garza, Ismelda</span><button onclick="fieldRemove(this)" title="Remove Garza, Ismelda"><i data-lucide="x" class="w-3.5 h-3.5"></i></button></div>
+                <div class="fld-row"><span>Godwin, Renee</span><button onclick="fieldRemove(this)" title="Remove Godwin, Renee"><i data-lucide="x" class="w-3.5 h-3.5"></i></button></div>
+                <div class="fld-row"><span>Greenfield, Nick</span><button onclick="fieldRemove(this)" title="Remove Greenfield, Nick"><i data-lucide="x" class="w-3.5 h-3.5"></i></button></div>
+                <div class="fld-row"><span>Grgich, Veronica</span><button onclick="fieldRemove(this)" title="Remove Grgich, Veronica"><i data-lucide="x" class="w-3.5 h-3.5"></i></button></div>
+                <div class="fld-row"><span>Grieshop, Zach</span><button onclick="fieldRemove(this)" title="Remove Grieshop, Zach"><i data-lucide="x" class="w-3.5 h-3.5"></i></button></div>
+                <div class="fld-row"><span>Grinnip, Joe</span><button onclick="fieldRemove(this)" title="Remove Grinnip, Joe"><i data-lucide="x" class="w-3.5 h-3.5"></i></button></div>
+                <div class="fld-row"><span>Gronberg, Bob</span><button onclick="fieldRemove(this)" title="Remove Gronberg, Bob"><i data-lucide="x" class="w-3.5 h-3.5"></i></button></div>
+                <div class="fld-row"><span>Groves, Chuck</span><button onclick="fieldRemove(this)" title="Remove Groves, Chuck"><i data-lucide="x" class="w-3.5 h-3.5"></i></button></div>
+                <div class="fld-row"><span>Hall, Adam</span><button onclick="fieldRemove(this)" title="Remove Hall, Adam"><i data-lucide="x" class="w-3.5 h-3.5"></i></button></div>
+                <div class="fld-row"><span>Hine, Andrew</span><button onclick="fieldRemove(this)" title="Remove Hine, Andrew"><i data-lucide="x" class="w-3.5 h-3.5"></i></button></div>
+                <div class="fld-row"><span>Holder, Sam</span><button onclick="fieldRemove(this)" title="Remove Holder, Sam"><i data-lucide="x" class="w-3.5 h-3.5"></i></button></div>
+                <div class="fld-row"><span>Hutcheson, Derrol</span><button onclick="fieldRemove(this)" title="Remove Hutcheson, Derrol"><i data-lucide="x" class="w-3.5 h-3.5"></i></button></div>
+                <div class="fld-row"><span>Jackman, Jeremy</span><button onclick="fieldRemove(this)" title="Remove Jackman, Jeremy"><i data-lucide="x" class="w-3.5 h-3.5"></i></button></div>
+                <div class="fld-row"><span>Jacobs, Stephen</span><button onclick="fieldRemove(this)" title="Remove Jacobs, Stephen"><i data-lucide="x" class="w-3.5 h-3.5"></i></button></div>
+                <div class="fld-row"><span>Jamison, Jennifer</span><button onclick="fieldRemove(this)" title="Remove Jamison, Jennifer"><i data-lucide="x" class="w-3.5 h-3.5"></i></button></div>
+                <div class="fld-row"><span>Janetvilay, Bounthavy</span><button onclick="fieldRemove(this)" title="Remove Janetvilay, Bounthavy"><i data-lucide="x" class="w-3.5 h-3.5"></i></button></div>
+                <div class="fld-row"><span>Joyce, Paul</span><button onclick="fieldRemove(this)" title="Remove Joyce, Paul"><i data-lucide="x" class="w-3.5 h-3.5"></i></button></div>
+                <div class="fld-row"><span>Kindred, Kelli</span><button onclick="fieldRemove(this)" title="Remove Kindred, Kelli"><i data-lucide="x" class="w-3.5 h-3.5"></i></button></div>
+                <div class="fld-row"><span>King, Morgan</span><button onclick="fieldRemove(this)" title="Remove King, Morgan"><i data-lucide="x" class="w-3.5 h-3.5"></i></button></div>
+                <div class="fld-row"><span>Knight, Tanya</span><button onclick="fieldRemove(this)" title="Remove Knight, Tanya"><i data-lucide="x" class="w-3.5 h-3.5"></i></button></div>
+                <div class="fld-row"><span>Koske, Nathan</span><button onclick="fieldRemove(this)" title="Remove Koske, Nathan"><i data-lucide="x" class="w-3.5 h-3.5"></i></button></div>
+                <div class="fld-row"><span>Lamasters, Julie</span><button onclick="fieldRemove(this)" title="Remove Lamasters, Julie"><i data-lucide="x" class="w-3.5 h-3.5"></i></button></div>
+                <div class="fld-row"><span>Lane, Amanda</span><button onclick="fieldRemove(this)" title="Remove Lane, Amanda"><i data-lucide="x" class="w-3.5 h-3.5"></i></button></div>
+                <div class="fld-row"><span>Love, Steve</span><button onclick="fieldRemove(this)" title="Remove Love, Steve"><i data-lucide="x" class="w-3.5 h-3.5"></i></button></div>
+                <div class="fld-row"><span>McCollum, Craig</span><button onclick="fieldRemove(this)" title="Remove McCollum, Craig"><i data-lucide="x" class="w-3.5 h-3.5"></i></button></div>
+                <div class="fld-row"><span>McInnis, Samantha</span><button onclick="fieldRemove(this)" title="Remove McInnis, Samantha"><i data-lucide="x" class="w-3.5 h-3.5"></i></button></div>
+                <div class="fld-row"><span>Messer, Sarah</span><button onclick="fieldRemove(this)" title="Remove Messer, Sarah"><i data-lucide="x" class="w-3.5 h-3.5"></i></button></div>
+                <div class="fld-row"><span>Mills, Alex</span><button onclick="fieldRemove(this)" title="Remove Mills, Alex"><i data-lucide="x" class="w-3.5 h-3.5"></i></button></div>
+                <div class="fld-row"><span>Momon, Cassandra</span><button onclick="fieldRemove(this)" title="Remove Momon, Cassandra"><i data-lucide="x" class="w-3.5 h-3.5"></i></button></div>
+                <div class="fld-row"><span>Morgado, Derrick</span><button onclick="fieldRemove(this)" title="Remove Morgado, Derrick"><i data-lucide="x" class="w-3.5 h-3.5"></i></button></div>
+                <div class="fld-row"><span>Murray, Stephanie</span><button onclick="fieldRemove(this)" title="Remove Murray, Stephanie"><i data-lucide="x" class="w-3.5 h-3.5"></i></button></div>
+                <div class="fld-row"><span>Naugle, Kevin</span><button onclick="fieldRemove(this)" title="Remove Naugle, Kevin"><i data-lucide="x" class="w-3.5 h-3.5"></i></button></div>
+                <div class="fld-row"><span>Nickoson, Staci</span><button onclick="fieldRemove(this)" title="Remove Nickoson, Staci"><i data-lucide="x" class="w-3.5 h-3.5"></i></button></div>
+                <div class="fld-row"><span>O'Dell, Matt</span><button onclick="fieldRemove(this)" title="Remove O'Dell, Matt"><i data-lucide="x" class="w-3.5 h-3.5"></i></button></div>
+                <div class="fld-row"><span>Palakie, Daphne</span><button onclick="fieldRemove(this)" title="Remove Palakie, Daphne"><i data-lucide="x" class="w-3.5 h-3.5"></i></button></div>
+                <div class="fld-row"><span>Palakie, Tom</span><button onclick="fieldRemove(this)" title="Remove Palakie, Tom"><i data-lucide="x" class="w-3.5 h-3.5"></i></button></div>
+                <div class="fld-row"><span>Paulus, Jaime</span><button onclick="fieldRemove(this)" title="Remove Paulus, Jaime"><i data-lucide="x" class="w-3.5 h-3.5"></i></button></div>
+                <div class="fld-row"><span>Perry, Jeremy</span><button onclick="fieldRemove(this)" title="Remove Perry, Jeremy"><i data-lucide="x" class="w-3.5 h-3.5"></i></button></div>
+                <div class="fld-row"><span>Phillips, Shannon</span><button onclick="fieldRemove(this)" title="Remove Phillips, Shannon"><i data-lucide="x" class="w-3.5 h-3.5"></i></button></div>
+                <div class="fld-row"><span>Porter, Donna</span><button onclick="fieldRemove(this)" title="Remove Porter, Donna"><i data-lucide="x" class="w-3.5 h-3.5"></i></button></div>
+                <div class="fld-row"><span>Potter, Caleb</span><button onclick="fieldRemove(this)" title="Remove Potter, Caleb"><i data-lucide="x" class="w-3.5 h-3.5"></i></button></div>
+                <div class="fld-row"><span>Potter, Michael</span><button onclick="fieldRemove(this)" title="Remove Potter, Michael"><i data-lucide="x" class="w-3.5 h-3.5"></i></button></div>
+                <div class="fld-row"><span>Price, James</span><button onclick="fieldRemove(this)" title="Remove Price, James"><i data-lucide="x" class="w-3.5 h-3.5"></i></button></div>
+                <div class="fld-row"><span>Ray, Jennifer</span><button onclick="fieldRemove(this)" title="Remove Ray, Jennifer"><i data-lucide="x" class="w-3.5 h-3.5"></i></button></div>
+                <div class="fld-row"><span>Read, Rhonda</span><button onclick="fieldRemove(this)" title="Remove Read, Rhonda"><i data-lucide="x" class="w-3.5 h-3.5"></i></button></div>
+                <div class="fld-row"><span>Robinson, Darren</span><button onclick="fieldRemove(this)" title="Remove Robinson, Darren"><i data-lucide="x" class="w-3.5 h-3.5"></i></button></div>
+                <div class="fld-row"><span>Ryan, Michael</span><button onclick="fieldRemove(this)" title="Remove Ryan, Michael"><i data-lucide="x" class="w-3.5 h-3.5"></i></button></div>
+                <div class="fld-row"><span>Ryan, Scott</span><button onclick="fieldRemove(this)" title="Remove Ryan, Scott"><i data-lucide="x" class="w-3.5 h-3.5"></i></button></div>
+                <div class="fld-row"><span>Scott, Michelle</span><button onclick="fieldRemove(this)" title="Remove Scott, Michelle"><i data-lucide="x" class="w-3.5 h-3.5"></i></button></div>
+                <div class="fld-row"><span>Self, Tiffany</span><button onclick="fieldRemove(this)" title="Remove Self, Tiffany"><i data-lucide="x" class="w-3.5 h-3.5"></i></button></div>
+                <div class="fld-row"><span>Shriner, Connie</span><button onclick="fieldRemove(this)" title="Remove Shriner, Connie"><i data-lucide="x" class="w-3.5 h-3.5"></i></button></div>
+                <div class="fld-row"><span>Shriner, Stephen</span><button onclick="fieldRemove(this)" title="Remove Shriner, Stephen"><i data-lucide="x" class="w-3.5 h-3.5"></i></button></div>
+                <div class="fld-row"><span>Simonis, Miller Ashley</span><button onclick="fieldRemove(this)" title="Remove Simonis, Miller Ashley"><i data-lucide="x" class="w-3.5 h-3.5"></i></button></div>
+                <div class="fld-row"><span>Singleton, Carrie</span><button onclick="fieldRemove(this)" title="Remove Singleton, Carrie"><i data-lucide="x" class="w-3.5 h-3.5"></i></button></div>
+                <div class="fld-row"><span>Sobol, Phil</span><button onclick="fieldRemove(this)" title="Remove Sobol, Phil"><i data-lucide="x" class="w-3.5 h-3.5"></i></button></div>
+                <div class="fld-row"><span>Stefanski, Gail</span><button onclick="fieldRemove(this)" title="Remove Stefanski, Gail"><i data-lucide="x" class="w-3.5 h-3.5"></i></button></div>
+                <div class="fld-row"><span>Stucka, Kerry</span><button onclick="fieldRemove(this)" title="Remove Stucka, Kerry"><i data-lucide="x" class="w-3.5 h-3.5"></i></button></div>
+                <div class="fld-row"><span>Talbot, Jared</span><button onclick="fieldRemove(this)" title="Remove Talbot, Jared"><i data-lucide="x" class="w-3.5 h-3.5"></i></button></div>
+                <div class="fld-row"><span>Trevisano, Matthew</span><button onclick="fieldRemove(this)" title="Remove Trevisano, Matthew"><i data-lucide="x" class="w-3.5 h-3.5"></i></button></div>
+                <div class="fld-row"><span>Trupiano, Brian</span><button onclick="fieldRemove(this)" title="Remove Trupiano, Brian"><i data-lucide="x" class="w-3.5 h-3.5"></i></button></div>
+                <div class="fld-row"><span>Vaden, Angela</span><button onclick="fieldRemove(this)" title="Remove Vaden, Angela"><i data-lucide="x" class="w-3.5 h-3.5"></i></button></div>
+                <div class="fld-row"><span>Walker-Collier, Robert</span><button onclick="fieldRemove(this)" title="Remove Walker-Collier, Robert"><i data-lucide="x" class="w-3.5 h-3.5"></i></button></div>
+                <div class="fld-row"><span>Walsh, John</span><button onclick="fieldRemove(this)" title="Remove Walsh, John"><i data-lucide="x" class="w-3.5 h-3.5"></i></button></div>
+                <div class="fld-row"><span>Watkins, Curtis</span><button onclick="fieldRemove(this)" title="Remove Watkins, Curtis"><i data-lucide="x" class="w-3.5 h-3.5"></i></button></div>
+                <div class="fld-row"><span>West, Tommy</span><button onclick="fieldRemove(this)" title="Remove West, Tommy"><i data-lucide="x" class="w-3.5 h-3.5"></i></button></div>
+                <div class="fld-row"><span>Whitworth, Zach</span><button onclick="fieldRemove(this)" title="Remove Whitworth, Zach"><i data-lucide="x" class="w-3.5 h-3.5"></i></button></div>
+                <div class="fld-row"><span>Wickersham, Chris</span><button onclick="fieldRemove(this)" title="Remove Wickersham, Chris"><i data-lucide="x" class="w-3.5 h-3.5"></i></button></div>
+                <div class="fld-row"><span>Wilkerson, Bekah</span><button onclick="fieldRemove(this)" title="Remove Wilkerson, Bekah"><i data-lucide="x" class="w-3.5 h-3.5"></i></button></div>
+                <div class="fld-row"><span>Ybarbo, Maribel</span><button onclick="fieldRemove(this)" title="Remove Ybarbo, Maribel"><i data-lucide="x" class="w-3.5 h-3.5"></i></button></div>
+                <div class="fld-row"><span>Zand, Peyman</span><button onclick="fieldRemove(this)" title="Remove Zand, Peyman"><i data-lucide="x" class="w-3.5 h-3.5"></i></button></div>
+            </div>
+            <p class="fld-empty hidden" id="fld-mgr-empty">Nothing matches that search.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
     <!-- =================== USERS & ROLES =================== -->
     <section class="page p-8" id="page-users">
       <div class="mb-6 flex items-end justify-between flex-wrap gap-3">
@@ -2484,6 +2787,47 @@
       </div>
     </section>
 
+    <div id="newevent-modal" class="modal-backdrop hidden" onclick="if(event.target===this) closeNewEvent()">
+        <div class="modal" style="max-width: 560px;">
+          <div class="modal-head">
+            <h3 class="font-display text-xl font-semibold">Create new event</h3>
+            <button onclick="closeNewEvent()" class="btn btn-ghost" style="padding: 6px;"><i data-lucide="x" class="w-4 h-4"></i></button>
+          </div>
+          <div class="modal-body">
+            <div class="rf-field" style="margin-bottom: 18px;">
+              <label class="rf-label"><span class="rf-req">*</span>Event name</label>
+              <input id="ne-name" class="rf-input" placeholder="Connection 2028" oninput="neSlug()" />
+              <div class="rf-help">Web address: <span id="ne-url" style="font-family: 'JetBrains Mono', monospace; font-size: 12px; color: var(--ink-2);">/CC-connection-2028</span></div>
+            </div>
+            <div class="rf-field" style="margin-bottom: 0;">
+              <label class="rf-label">Start from</label>
+              <select id="ne-copy" class="rf-select">
+                <option>Connection 2027</option>
+                <option>Connection 2026</option>
+                <option>Connection 2025</option>
+                <option>Start empty</option>
+              </select>
+              <div class="rf-help">Nobody rebuilds the website and emails from scratch each year.</div>
+            </div>
+
+            <div class="p-3 rounded-xl mt-5 text-xs" style="background: var(--cream); color: var(--ink-2);">
+              <div class="flex items-start gap-2.5 mb-2">
+                <i data-lucide="copy" class="w-4 h-4 shrink-0 mt-0.5" style="color: var(--teal);"></i>
+                <span><b>Carried over:</b> the website pages and their copy, and the five email templates. Reword them for this event rather than writing them again.</span>
+              </div>
+              <div class="flex items-start gap-2.5">
+                <i data-lucide="minus-circle" class="w-4 h-4 shrink-0 mt-0.5" style="color: var(--ink-3);"></i>
+                <span><b>Starts empty:</b> participants, registrations, hotel requests, invitations and confirmations sent, and the change log. Last year's event is left untouched.</span>
+              </div>
+            </div>
+          </div>
+          <div class="modal-foot" style="justify-content: flex-end;">
+            <button onclick="closeNewEvent()" class="btn btn-outline">Cancel</button>
+            <button onclick="createEvent()" class="btn btn-brand">Create event</button>
+          </div>
+        </div>
+      </div>
+
 </main>
 </div>
 
@@ -2504,8 +2848,10 @@
 
   const titles = {
     'invitees': 'Participants',
+    'invitees-empty': 'Participants',
     'changes': 'Notifications',
     'users': 'Users',
+    'fields': 'Fields',
     'form-registration': 'Register',
     'manage-registration': 'Manage Registration',
     'website-builder': 'Home',
@@ -2648,6 +2994,58 @@
     const btn = document.getElementById('rf-save-btn');
     if (btn) { btn.textContent = 'Saved'; setTimeout(() => { btn.textContent = 'Save'; }, 1600); }
   }
+  // Bianca flips this at the hotel's cutoff. Registration stays open — only the
+  // hotel questions lock, for new registrants and for anyone changing an existing one.
+  // Unpublishing is how registration closes — one switch, same as every other page
+  let registerPublished = true;
+  function rfPublishToggle(e) {
+    e.preventDefault();
+    e.stopPropagation();
+    registerPublished = !registerPublished;
+    const t = document.getElementById('rf-pub-toggle');
+    t.style.background = registerPublished ? 'var(--gold)' : 'var(--line)';
+    t.firstElementChild.className = registerPublished
+      ? 'w-4 h-4 rounded-full bg-white ml-auto'
+      : 'w-4 h-4 rounded-full bg-white';
+    document.getElementById('rf-pub-note').innerHTML = registerPublished
+      ? 'Live on the site, reached from the Register button in the header. Unpublish to close registration.'
+      : 'Hidden \u2014 you can still edit and save it here, but no one can register.';
+  }
+
+  let hotelRequestsOpen = true;
+  function rfHotelToggle(e) {
+    e.preventDefault();
+    e.stopPropagation();
+    hotelRequestsOpen = !hotelRequestsOpen;
+    rfApplyHotelLock();
+  }
+  function rfApplyHotelLock() {
+    const on = hotelRequestsOpen;
+    const t = document.getElementById('rf-hotel-toggle');
+    if (t) {
+      t.style.background = on ? 'var(--gold)' : 'var(--line)';
+      t.firstElementChild.className = on ? 'w-4 h-4 rounded-full bg-white ml-auto' : 'w-4 h-4 rounded-full bg-white';
+    }
+    const note = document.getElementById('rf-hotel-note');
+    if (note) {
+      note.innerHTML = on
+        ? "Turn this off at the hotel's cutoff. Registration stays open \u2014 only the hotel questions lock."
+        : 'Closed. In-person registration still works &mdash; the hotel questions are locked.';
+    }
+    const notice = document.getElementById('rf-hotel-closed');
+    if (notice) {
+      notice.classList.toggle('hidden', on);
+      // Drop the fields rather than dim them — nobody can use them, and a wall of
+      // greyed-out inputs is a lot to scroll past on a phone. The heading and the
+      // notice stay, so someone looking for "where do I book my room" gets an answer.
+      notice.closest('.rf-step').querySelectorAll('.rf-field').forEach(function (f) {
+        f.style.display = on ? '' : 'none';
+      });
+    }
+    const mr = document.getElementById('mr-hotel-closed');
+    if (mr) mr.classList.toggle('hidden', on);
+  }
+
   function rfToggleMode(value) {
     const virtual = value === 'Virtually';
     document.querySelectorAll('#page-form-registration [data-inperson]').forEach(el => {
@@ -2785,6 +3183,46 @@
     v = (v == null ? '' : String(v)).trim();
     return /[",\n]/.test(v) ? '"' + v.replace(/"/g, '""') + '"' : v;
   }
+  // The four stat cards each export the list behind their number. Roster is every
+  // participant with their invitation status, since that card counts the whole roster.
+  const participantExports = {
+    roster:  { label: 'roster',            keep: function () { return true; } },
+    hotel:   { label: 'hotel-requests',    keep: function (c) { return c[6].textContent.trim() === 'Yes'; } },
+    virtual: { label: 'virtual-attendees', keep: function (c) { return c[5].textContent.trim() === 'Virtual'; } },
+    dinner:  { label: 'dinner-requests',   keep: function (c) { return c[7].textContent.trim() === 'Yes'; } }
+  };
+  function exportParticipants(kind) {
+    const spec = participantExports[kind];
+    const rows = [['3/4 ID', 'Last Name', 'First Name', 'Email Address', 'Department', 'Status', 'Invited', 'Hotel', 'Dinner']];
+    document.querySelectorAll('#page-invitees .report-table tbody tr').forEach(function (tr) {
+      const c = tr.cells;
+      if (!spec.keep(c)) return;
+      const full = c[1].textContent.trim();
+      const parts = full.split(',');
+      const status = c[5].textContent.trim();
+      rows.push([
+        c[3].textContent.trim(),
+        parts[0].trim(),
+        (parts[1] || '').trim(),
+        c[2].textContent.trim(),
+        c[4].textContent.trim(),
+        status,
+        status === 'Not Invited' ? 'No' : 'Yes',
+        c[6].textContent.trim(),
+        c[7].textContent.trim()
+      ]);
+    });
+    const csv = rows.map(function (r) { return r.map(csvCell).join(','); }).join('\r\n');
+    const blob = new Blob(['\ufeff' + csv], { type: 'text/csv;charset=utf-8;' });
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = 'connection-2027-' + spec.label + '.csv';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(a.href);
+  }
+
   function exportHotelCSV() {
     const rows = [['3/4 ID', 'Last Name', 'First Name', 'Email Address', 'Room Type', 'Rooms', 'ADA Accessible', 'Check-In Date', 'Check-Out Date', 'Confirmation Number']];
     // Ticked rows only, so a weekly file to the hotel can carry just what changed.
@@ -2942,6 +3380,32 @@
   }
   function closeEmailEdit() { document.getElementById('email-modal').classList.add('hidden'); }
 
+  // Create new event
+  function neSlug() {
+    const name = document.getElementById('ne-name').value.trim() || 'Connection 2028';
+    const slug = 'CC-' + name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+    document.getElementById('ne-url').textContent = '/' + slug;
+  }
+  function openNewEvent(e) {
+    if (e) e.stopPropagation();
+    document.getElementById('year-menu').classList.add('hidden');
+    document.getElementById('ne-name').value = '';
+    document.getElementById('ne-copy').selectedIndex = 0;
+    neSlug();
+    document.getElementById('newevent-modal').classList.remove('hidden');
+    if (window.lucide) lucide.createIcons();
+  }
+  function closeNewEvent() { document.getElementById('newevent-modal').classList.add('hidden'); }
+  function createEvent() {
+    const name = document.getElementById('ne-name').value.trim() || 'Connection 2028';
+    document.getElementById('year-label').textContent = name;
+    document.getElementById('crumb-event').textContent = name;
+    document.querySelectorAll('.year-option').forEach(function (o) { o.classList.remove('active'); });
+    closeNewEvent();
+    // land on the empty roster — loading people is the first thing to do in a new event
+    goTo('invitees-empty', document.querySelector('[data-page="invitees"]'));
+  }
+
   // Edit participant modal
   function peStatusChange() {
     const status = document.getElementById('pe-status').value;
@@ -2998,6 +3462,69 @@
     if (window.lucide) lucide.createIcons();
   }
   function closeHotelEdit() { document.getElementById('hoteledit-modal').classList.add('hidden'); }
+
+  // Fields — the department and manager lists behind the registration form
+  function fieldCount(kind) {
+    const list = document.getElementById('fld-' + kind + '-list');
+    document.getElementById('fld-' + kind + '-count').textContent = list.querySelectorAll('.fld-row').length;
+  }
+  function fieldSearch(kind, q) {
+    q = q.trim().toLowerCase();
+    let shown = 0;
+    document.querySelectorAll('#fld-' + kind + '-list .fld-row').forEach(function (row) {
+      const hit = row.firstElementChild.textContent.toLowerCase().includes(q);
+      row.style.display = hit ? '' : 'none';
+      if (hit) shown++;
+    });
+    document.getElementById('fld-' + kind + '-empty').classList.toggle('hidden', shown > 0);
+  }
+  function fieldToggle(kind) {
+    const body = document.getElementById('fld-' + kind + '-body');
+    const head = body.previousElementSibling;
+    const open = body.classList.toggle('hidden') === false;
+    head.setAttribute('aria-expanded', open ? 'true' : 'false');
+    head.querySelector('.fld-chev').classList.toggle('fld-chev-closed', !open);
+  }
+  function fieldRemove(btn) {
+    const row = btn.closest('.fld-row');
+    const kind = row.closest('.fld-list').id.split('-')[1];
+    row.remove();
+    fieldCount(kind);
+  }
+  function fieldAdd(kind) {
+    const box = document.getElementById('fld-' + kind + '-new');
+    box.classList.remove('hidden');
+    box.querySelector('input').focus();
+  }
+  function fieldCancel(kind) {
+    const box = document.getElementById('fld-' + kind + '-new');
+    box.querySelector('input').value = '';
+    box.classList.add('hidden');
+  }
+  function fieldCommit(kind) {
+    const box = document.getElementById('fld-' + kind + '-new');
+    const input = box.querySelector('input');
+    const value = input.value.trim();
+    if (!value) return;
+    const list = document.getElementById('fld-' + kind + '-list');
+    const existing = Array.from(list.querySelectorAll('.fld-row'));
+    // don't let the same entry in twice — it would show up doubled in the form's dropdown
+    if (existing.some(function (r) { return r.firstElementChild.textContent.toLowerCase() === value.toLowerCase(); })) {
+      input.select();
+      return;
+    }
+    const row = document.createElement('div');
+    row.className = 'fld-row';
+    row.innerHTML = '<span></span><button onclick="fieldRemove(this)" title="Remove"><i data-lucide="x" class="w-3.5 h-3.5"></i></button>';
+    row.firstElementChild.textContent = value;
+    const after = existing.find(function (r) { return r.firstElementChild.textContent.localeCompare(value) > 0; });
+    list.insertBefore(row, after || null);
+    fieldCount(kind);
+    input.value = '';
+    box.classList.add('hidden');
+    if (window.lucide) lucide.createIcons();
+    row.scrollIntoView({ block: 'nearest' });
+  }
 
   // Edit user modal
   const userRoles = {
@@ -3072,6 +3599,8 @@
       if (he && !he.classList.contains('hidden')) closeHotelEdit();
       const pe = document.getElementById('pedit-modal');
       if (pe && !pe.classList.contains('hidden')) closeParticipantEdit();
+      const ne = document.getElementById('newevent-modal');
+      if (ne && !ne.classList.contains('hidden')) closeNewEvent();
       const em = document.getElementById('email-modal');
       if (em && !em.classList.contains('hidden')) closeEmailEdit();
     }
@@ -3103,6 +3632,7 @@
   // ---- Website editor ----
   const siteTitles = {
     'Home': 'CereCore Connection 2027',
+    'Agenda': 'Agenda',
     'Travel & Hotel': 'Travel &amp; Hotel',
     'FAQs': 'FAQs',
     'Community': 'Community',
@@ -3114,43 +3644,12 @@
 <p style="text-align:center;"><b>January 13–14, 2027 · Sonesta Nashville Airport</b></p>
 <p style="text-align:center;">CereCore's annual event — join us in Nashville or attend virtually.</p>
 <h2>The week at a glance</h2>
-<h3>Tuesday, January 12 — Award Nominees' Reception</h3>
-<p>By invitation, in the Capitol Ballroom. If your manager is holding a department meeting Wednesday, you may check in to the hotel as early as Tuesday.</p>
-<h3>Wednesday, January 13 — Department meetings &amp; headshots</h3>
-<p>Breakfast and lunch provided. Your manager has your meeting time and room — locations below. Headshots in Jackson, 7:30 AM–1 PM. Laptop trouble? Desktop analysts are in Memphis — enter a ServiceNow request and come by.</p>
-<h3>Thursday, January 14 — Main event day</h3>
 <ul>
-<li><b>7:00a</b> — Doors open · check-in · breakfast</li>
-<li><b>8:00a</b> — Opening remarks</li>
-<li><b>9:00a</b> — Keynote</li>
-<li><b>10:20a</b> — Our Journey with HCA Healthcare</li>
-<li><b>11:25a</b> — Lunch</li>
-<li><b>12:45p</b> — Open Kudos + Recognition Points</li>
-<li><b>1:00p</b> — Afternoon sessions</li>
-<li><b>2:35p</b> — Awards &amp; closing remarks</li>
-<li><b>6:00p</b> — Event dinner, Nashville Ballroom</li>
+<li><b>Tuesday, January 12</b> &mdash; Award Nominees' Reception, by invitation</li>
+<li><b>Wednesday, January 13</b> &mdash; Department meetings &amp; headshots</li>
+<li><b>Thursday, January 14</b> &mdash; Main event day, closing with the awards and dinner</li>
 </ul>
-<p>After the awards, celebrate with dinner, a DJ, and dancing.</p>
-<h2>Department meeting rooms</h2>
-<ul>
-<li><b>Advanced Data Solutions</b> — Salon H</li>
-<li><b>Contracts and Finance</b> — Chattanooga</li>
-<li><b>Desktop</b> — Memphis</li>
-<li><b>Epic</b> — Salon D &amp; E</li>
-<li><b>Headshots</b> — Jackson</li>
-<li><b>Managed Services</b> — Salon C</li>
-<li><b>MEDITECH</b> — Capitol I</li>
-<li><b>PMO</b> — Salon B</li>
-<li><b>Sales and Marketing</b> — Salon G</li>
-<li><b>Staffing Services</b> — Salon A</li>
-</ul>
-<h2>Check-in times</h2>
-<p>Print your badge at the registration table in the Nashville Ballroom foyer. Available:</p>
-<ul>
-<li>Tuesday: 4–6 PM</li>
-<li>Wednesday: 7–9 AM · 11 AM–1 PM · 4–6 PM</li>
-<li>Thursday: from 7 AM</li>
-</ul>
+<p>Times, meeting rooms and check-in windows are on the <b>Agenda</b> page.</p>
 <h2>Our 2027 guest speaker</h2>
 <p><b>Speaker name</b>, one-line credential.</p>
 <p>Two to three sentence bio goes here. Last year: Tali Sharot — award-winning author, MIT and UCL professor, and leading expert on decision-making, emotion, influence, and motivation. Her TED talks have over 13 million views; she's been featured on CNN and the BBC and has spoken for Google, Microsoft, and the World Economic Forum.</p>
@@ -3160,6 +3659,51 @@
 <blockquote>"It was great to learn about our company growth and have questions answered."</blockquote>
 <blockquote>"I was pleasantly surprised with how often I saw leadership — I was even able to introduce myself directly."</blockquote>
 <p>Attending online? Register anyway — virtual attendees get the livestream link and day-of tips.</p>`,
+    'Agenda': `<p>All times are Central. Check the room list before you arrive &mdash; assignments can change late.</p>
+<h2>Thursday, January 14 &mdash; Main event day</h2>
+<ul>
+<li><b>7:00a</b> &mdash; Doors open &middot; check-in &middot; breakfast</li>
+<li><b>8:00a</b> &mdash; Navigating With Purpose: opening remarks</li>
+<li><b>9:00a</b> &mdash; Keynote</li>
+<li><b>10:20a</b> &mdash; Driving Momentum: our journey with HCA Healthcare</li>
+<li><b>11:00a</b> &mdash; Plotting Purposeful Innovation</li>
+<li><b>11:25a</b> &mdash; Lunch</li>
+<li><b>12:45p</b> &mdash; Open Kudos + Recognition Points</li>
+<li><b>1:00p</b> &mdash; Leading with Their Why: market needs alignment</li>
+<li><b>1:40p</b> &mdash; Leading with Their Why: client-centered advocacy</li>
+<li><b>2:35p</b> &mdash; Awards &amp; closing remarks</li>
+<li><b>6:00p</b> &mdash; Dinner in the Nashville Ballroom, with a DJ and dancing</li>
+</ul>
+<h2>Wednesday, January 13 &mdash; Department meetings</h2>
+<p>Your manager has your meeting time. Breakfast and lunch are provided.</p>
+<ul>
+<li><b>Advanced Data Solutions</b> &mdash; Salon H</li>
+<li><b>Contracts and Finance</b> &mdash; Chattanooga</li>
+<li><b>Data Analytics Showcase</b> &mdash; Chattanooga, 1:00 PM</li>
+<li><b>Desktop</b> &mdash; Memphis</li>
+<li><b>Epic</b> &mdash; Salon D &amp; E</li>
+<li><b>Managed Services</b> &mdash; Salon C</li>
+<li><b>MEDITECH</b> &mdash; Capitol I</li>
+<li><b>PMO</b> &mdash; Salon B</li>
+<li><b>Sales and Marketing</b> &mdash; Salon G</li>
+<li><b>Staffing Services</b> &mdash; Salon A</li>
+</ul>
+<p><b>Headshots</b> in Jackson, 7:30 AM &ndash; 1 PM. <b>Laptop trouble?</b> Desktop analysts are in Memphis &mdash; raise a ServiceNow request and come by.</p>
+<h2>Thursday, January 14 &mdash; Where to find things</h2>
+<ul>
+<li><b>Main event</b> &mdash; Nashville Ballroom</li>
+<li><b>Application Support</b> &mdash; Capitol I</li>
+<li><b>Desktop</b> &mdash; Memphis</li>
+<li><b>CereCore Women in IT</b> &mdash; Stones River</li>
+<li><b>Headshots</b> &mdash; Jackson, 7:30 AM &ndash; 4 PM</li>
+</ul>
+<h2>Check-in times</h2>
+<p>Print your badge at the registration table in the Nashville Ballroom foyer.</p>
+<ul>
+<li><b>Tuesday</b> &mdash; 4&ndash;6 PM</li>
+<li><b>Wednesday</b> &mdash; 7&ndash;9 AM &middot; 11 AM&ndash;1 PM &middot; 4&ndash;6 PM</li>
+<li><b>Thursday</b> &mdash; from 7 AM</li>
+</ul>`,
 
     'Travel & Hotel': `<h2>Key dates</h2>
 <ul>
@@ -3252,8 +3796,8 @@
   // Which site pages are published. A published top-level page is listed in the
   // public header nav; an unpublished one is not reachable at all. Child pages of Register
   // (Manage Registration, Check-in) are never listed, so they aren't in here.
-  const SITE_PAGE_ORDER = ['Home', 'Travel & Hotel', 'FAQs', 'Community', 'Attend Virtually', 'Game'];
-  const siteNavListed = { 'Home': true, 'Travel & Hotel': true, 'FAQs': true, 'Community': true, 'Attend Virtually': false, 'Game': false };
+  const SITE_PAGE_ORDER = ['Home', 'Agenda', 'Travel & Hotel', 'FAQs', 'Community', 'Attend Virtually', 'Game'];
+  const siteNavListed = { 'Home': true, 'Agenda': true, 'Travel & Hotel': true, 'FAQs': true, 'Community': true, 'Attend Virtually': false, 'Game': false };
 
   function renderSiteNav() {
     const listed = SITE_PAGE_ORDER.filter(function (n) { return siteNavListed[n]; });
