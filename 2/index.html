@@ -118,6 +118,13 @@
   .fld-row button { color: var(--ink-3); background: none; border: 0; cursor: pointer; padding: 3px; border-radius: 6px; flex: 0 0 auto; }
   .fld-row button:hover { color: var(--rose); background: #ffe4e6; }
   .fld-new { display: flex; gap: 8px; margin-bottom: 10px; }
+  .fld-bulk { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 0 4px 8px; }
+  .fld-pick { display: flex; align-items: center; gap: 10px; cursor: pointer; min-width: 0; flex: 1 1 auto; }
+  .fld-pick input { width: 15px; height: 15px; flex: 0 0 auto; accent-color: var(--brand); cursor: pointer; }
+  .fld-bulk .fld-pick span { font-size: 13px; color: var(--ink-2); font-weight: 600; }
+  .fld-del[disabled] { color: var(--ink-3); cursor: default; opacity: 0.55; }
+  .fld-del:not([disabled]) { color: var(--rose); border-color: var(--rose); }
+  .fld-del:not([disabled]):hover { background: #fff1f2; }
   .fld-empty { font-size: 13px; color: var(--ink-3); padding: 14px 2px 0; }
 
   .empty-state { text-align: center; padding: 40px 20px 34px; }
@@ -1369,12 +1376,12 @@
               <!-- STEP 1 -->
               <div class="rf-step">
                 <div class="rf-steptitle">Personal information</div>
-                <div class="rf-stepnote">Select how you plan to attend. In-person registrants continue to hotel and dinner.</div>
+                <div class="rf-stepnote">Select how you plan to attend. Virtual registrants skip the hotel questions.</div>
 
                 <div class="rf-field">
                   <label class="rf-label"><span class="rf-req">*</span>Will you be attending in-person or virtually?</label>
                   <select id="rf-attendance" class="rf-select" onchange="rfToggleMode(this.value)"><option>Select&hellip;</option><option>In person</option><option>Virtually</option></select>
-                  <div class="rf-help">Controls the rest of the flow &mdash; virtual registrants skip hotel and dinner.</div>
+                  <div class="rf-help">Controls the rest of the flow &mdash; virtual registrants skip the hotel questions but are still asked about the dinner.</div>
                 </div>
 
                 <div class="grid grid-cols-2 gap-4">
@@ -1441,7 +1448,7 @@
                   <i data-lucide="video" class="w-5 h-5 shrink-0" style="color: var(--sky-dark);"></i>
                   <div style="font-size: 15px; color: var(--ink-2);">
                     <b style="color: var(--sky-dark);">You're registering to attend virtually.</b>
-                    Hotel and dinner steps don't apply &mdash; we'll email your livestream link before the event.
+                    You won't need a hotel room. We'll email your livestream link before the event &mdash; and if you're coming to the event dinner, tell us below.
                   </div>
                 </div>
               </div>
@@ -1518,9 +1525,9 @@
               </div>
 
               <!-- STEP 3 -->
-              <div class="rf-step" data-inperson>
+              <div class="rf-step">
                 <div class="rf-steptitle">Event dinner</div>
-                <div class="rf-stepnote">Shown to in-person registrants only.</div>
+                <div class="rf-stepnote">Asked of everyone &mdash; in-person and virtual.</div>
                 <div class="rf-field">
                   <label class="rf-label"><span class="rf-req">*</span>Will you be attending the event dinner?</label>
                   <select class="rf-select"><option>Select&hellip;</option><option>Yes, I'll be there</option><option>No, I can't make it</option></select>
@@ -1615,10 +1622,11 @@
               <div id="wb-canvas" class="wysiwyg" contenteditable="true" spellcheck="false" style="padding: 32px 34px; min-height: 460px; background: white;"></div>
             </div>
 
-            <!-- Game page: no toolbar, no canvas — content is pushed from an AI tool -->
+            <!-- Game page: editable intro above a connected game board -->
             <div id="wb-game-panel" class="hidden card overflow-hidden">
               <div class="flex items-center justify-end gap-2 px-4 py-2.5" style="background: var(--cream); border-bottom: 1px solid var(--line);">
-                <button class="btn btn-brand text-xs" style="padding: 6px 14px;">Save</button>
+                <span id="wb-game-dirty" class="text-[10px] hidden mr-auto" style="color: var(--gold-dark); font-weight: 600;">Unsaved changes</span>
+                <button id="wb-game-save-btn" onclick="wbSave()" class="btn btn-brand text-xs" style="padding: 6px 14px;">Save</button>
                 <div class="relative flex" style="align-self: stretch;">
                   <button onclick="wbGameMenu(event)" class="btn btn-outline text-xs" style="padding: 6px 10px; height: 100%;" title="More options"><i data-lucide="more-horizontal" class="w-3.5 h-3.5"></i></button>
                   <div id="wb-game-menu" class="hidden absolute right-0 top-full mt-2 card p-2 z-30" style="width: 250px; box-shadow: 0 16px 40px -12px rgba(28,25,23,0.25);">
@@ -1634,7 +1642,37 @@
                   </div>
                 </div>
               </div>
-              <div class="flex items-center justify-center" style="background: var(--ink); min-height: 420px;">
+              <!-- Editable intro: rules, prizes, images. Written here, sits above the game itself. -->
+              <div class="flex items-center gap-1 px-3 py-2 flex-wrap" style="background: white; border-bottom: 1px solid var(--line);">
+                <button data-tool onclick="wbFormat('formatBlock','<h2>')" class="btn btn-ghost text-xs font-display font-bold px-2.5">H2</button>
+                <button data-tool onclick="wbFormat('formatBlock','<h3>')" class="btn btn-ghost text-xs font-display font-bold px-2.5">H3</button>
+                <div class="w-px h-4 mx-1" style="background: var(--line);"></div>
+                <button data-tool onclick="wbFormat('bold')" class="btn btn-ghost text-xs px-2.5" style="font-weight: 800;">B</button>
+                <button data-tool onclick="wbFormat('italic')" class="btn btn-ghost text-xs px-2.5" style="font-style: italic; font-weight: 600;">I</button>
+                <button data-tool onclick="wbLink()" class="btn btn-ghost px-2" title="Add link"><i data-lucide="link" class="w-4 h-4"></i></button>
+                <button data-tool onclick="wbFormat('insertUnorderedList')" class="btn btn-ghost px-2" title="Bulleted list"><i data-lucide="list" class="w-4 h-4"></i></button>
+                <button data-tool onclick="wbFormat('insertOrderedList')" class="btn btn-ghost px-2" title="Numbered list"><i data-lucide="list-ordered" class="w-4 h-4"></i></button>
+                <div class="w-px h-4 mx-1" style="background: var(--line);"></div>
+                <button data-tool onclick="document.getElementById('wb-game-image-input').click()" class="btn btn-ghost px-2" title="Insert image"><i data-lucide="image" class="w-4 h-4"></i></button>
+                <button data-tool onclick="wbClearFormat()" class="btn btn-ghost px-2" title="Clear formatting"><i data-lucide="eraser" class="w-4 h-4"></i></button>
+                <input id="wb-game-image-input" type="file" accept="image/*" class="hidden" onchange="wbInsertImage(this)" />
+              </div>
+              <div id="wb-game-canvas" class="wysiwyg" contenteditable="true" spellcheck="false" style="padding: 30px 34px; min-height: 240px; background: white;">
+                <h2>How to play</h2>
+                <p>Collect a stamp from every booth in the exhibit hall. Booth hosts will scan your badge or stamp your card &mdash; either way, you need all of them to be entered.</p>
+                <ul>
+                  <li>Pick up your card at check-in, or use the digital board below.</li>
+                  <li>Visit every booth between the morning and afternoon sessions.</li>
+                  <li>Turn in a full card at the registration desk before the dinner.</li>
+                </ul>
+                <h3>Prizes</h3>
+                <p>Winners are drawn at the dinner. You need to be in the room to claim.</p>
+              </div>
+              <div class="px-4 py-2 flex items-center gap-2" style="background: var(--cream); border-top: 1px solid var(--line); border-bottom: 1px solid var(--line);">
+                <i data-lucide="gamepad-2" class="w-3.5 h-3.5" style="color: var(--ink-3);"></i>
+                <span class="text-xs" style="color: var(--ink-3);">The game board itself is pushed in from the game tool and isn't edited here.</span>
+              </div>
+              <div class="flex items-center justify-center" style="background: var(--ink); min-height: 340px;">
                 <span style="font-family: 'JetBrains Mono', monospace; font-size: 13px; color: #86efac; letter-spacing: 0.04em;">&lt; connected page /&gt;</span>
               </div>
             </div>
@@ -2113,8 +2151,8 @@
                       <div class="mr-row"><dt>Preferences and special requests</dt><dd>Ground floor if one is available</dd></div>
                     </dl>
 
-                    <div class="mr-sec" data-mrinperson>Event dinner</div>
-                    <dl class="mr-dl" data-mrinperson>
+                    <div class="mr-sec">Event dinner</div>
+                    <dl class="mr-dl">
                       <div class="mr-row"><dt>Will you be attending the event dinner?</dt><dd>Yes, I'll be there</dd></div>
                       <div class="mr-row mr-fill" aria-hidden="true"></div>
                     </dl>
@@ -2563,26 +2601,30 @@
               <button onclick="fieldCommit('dept')" class="btn btn-brand text-xs shrink-0">Add</button>
               <button onclick="fieldCancel('dept')" class="btn btn-ghost text-xs shrink-0">Cancel</button>
             </div>
+            <div class="fld-bulk">
+              <label class="fld-pick"><input type="checkbox" id="fld-dept-all" onchange="fieldSelectAll('dept', this.checked)" /><span>Select all</span></label>
+              <button id="fld-dept-del" class="btn btn-outline fld-del text-xs" onclick="fieldRemoveSelected('dept')" disabled><i data-lucide="trash-2" class="w-3.5 h-3.5"></i> Remove</button>
+            </div>
             <div class="fld-list" id="fld-dept-list">
-                <div class="fld-row"><span>Administration</span><button onclick="fieldRemove(this)" title="Remove Administration"><i data-lucide="x" class="w-3.5 h-3.5"></i></button></div>
-                <div class="fld-row"><span>Epic</span><button onclick="fieldRemove(this)" title="Remove Epic"><i data-lucide="x" class="w-3.5 h-3.5"></i></button></div>
-                <div class="fld-row"><span>Finance</span><button onclick="fieldRemove(this)" title="Remove Finance"><i data-lucide="x" class="w-3.5 h-3.5"></i></button></div>
-                <div class="fld-row"><span>Managed Services Admin</span><button onclick="fieldRemove(this)" title="Remove Managed Services Admin"><i data-lucide="x" class="w-3.5 h-3.5"></i></button></div>
-                <div class="fld-row"><span>Marketing</span><button onclick="fieldRemove(this)" title="Remove Marketing"><i data-lucide="x" class="w-3.5 h-3.5"></i></button></div>
-                <div class="fld-row"><span>MEDITECH</span><button onclick="fieldRemove(this)" title="Remove MEDITECH"><i data-lucide="x" class="w-3.5 h-3.5"></i></button></div>
-                <div class="fld-row"><span>MEDITECH Consulting</span><button onclick="fieldRemove(this)" title="Remove MEDITECH Consulting"><i data-lucide="x" class="w-3.5 h-3.5"></i></button></div>
-                <div class="fld-row"><span>MEDITECH Professional Svcs</span><button onclick="fieldRemove(this)" title="Remove MEDITECH Professional Svcs"><i data-lucide="x" class="w-3.5 h-3.5"></i></button></div>
-                <div class="fld-row"><span>PMO</span><button onclick="fieldRemove(this)" title="Remove PMO"><i data-lucide="x" class="w-3.5 h-3.5"></i></button></div>
-                <div class="fld-row"><span>Sales</span><button onclick="fieldRemove(this)" title="Remove Sales"><i data-lucide="x" class="w-3.5 h-3.5"></i></button></div>
-                <div class="fld-row"><span>ServiceNow</span><button onclick="fieldRemove(this)" title="Remove ServiceNow"><i data-lucide="x" class="w-3.5 h-3.5"></i></button></div>
-                <div class="fld-row"><span>Staff Aug Non-HCA</span><button onclick="fieldRemove(this)" title="Remove Staff Aug Non-HCA"><i data-lucide="x" class="w-3.5 h-3.5"></i></button></div>
-                <div class="fld-row"><span>Staffing Services</span><button onclick="fieldRemove(this)" title="Remove Staffing Services"><i data-lucide="x" class="w-3.5 h-3.5"></i></button></div>
-                <div class="fld-row"><span>Strategic Consulting</span><button onclick="fieldRemove(this)" title="Remove Strategic Consulting"><i data-lucide="x" class="w-3.5 h-3.5"></i></button></div>
-                <div class="fld-row"><span>Technology Managed Services</span><button onclick="fieldRemove(this)" title="Remove Technology Managed Services"><i data-lucide="x" class="w-3.5 h-3.5"></i></button></div>
-                <div class="fld-row"><span>Technology Consulting Services</span><button onclick="fieldRemove(this)" title="Remove Technology Consulting Services"><i data-lucide="x" class="w-3.5 h-3.5"></i></button></div>
-                <div class="fld-row"><span>Tech Engineering Services</span><button onclick="fieldRemove(this)" title="Remove Tech Engineering Services"><i data-lucide="x" class="w-3.5 h-3.5"></i></button></div>
-                <div class="fld-row"><span>Tier 1 Support Services</span><button onclick="fieldRemove(this)" title="Remove Tier 1 Support Services"><i data-lucide="x" class="w-3.5 h-3.5"></i></button></div>
-                <div class="fld-row"><span>Tier 2 Support Services</span><button onclick="fieldRemove(this)" title="Remove Tier 2 Support Services"><i data-lucide="x" class="w-3.5 h-3.5"></i></button></div>
+                <div class="fld-row"><label class="fld-pick"><input type="checkbox" onchange="fieldPick(this)" /><span>Administration</span></label><button onclick="fieldRemove(this)" title="Remove Administration"><i data-lucide="x" class="w-3.5 h-3.5"></i></button></div>
+                <div class="fld-row"><label class="fld-pick"><input type="checkbox" onchange="fieldPick(this)" /><span>Epic</span></label><button onclick="fieldRemove(this)" title="Remove Epic"><i data-lucide="x" class="w-3.5 h-3.5"></i></button></div>
+                <div class="fld-row"><label class="fld-pick"><input type="checkbox" onchange="fieldPick(this)" /><span>Finance</span></label><button onclick="fieldRemove(this)" title="Remove Finance"><i data-lucide="x" class="w-3.5 h-3.5"></i></button></div>
+                <div class="fld-row"><label class="fld-pick"><input type="checkbox" onchange="fieldPick(this)" /><span>Managed Services Admin</span></label><button onclick="fieldRemove(this)" title="Remove Managed Services Admin"><i data-lucide="x" class="w-3.5 h-3.5"></i></button></div>
+                <div class="fld-row"><label class="fld-pick"><input type="checkbox" onchange="fieldPick(this)" /><span>Marketing</span></label><button onclick="fieldRemove(this)" title="Remove Marketing"><i data-lucide="x" class="w-3.5 h-3.5"></i></button></div>
+                <div class="fld-row"><label class="fld-pick"><input type="checkbox" onchange="fieldPick(this)" /><span>MEDITECH</span></label><button onclick="fieldRemove(this)" title="Remove MEDITECH"><i data-lucide="x" class="w-3.5 h-3.5"></i></button></div>
+                <div class="fld-row"><label class="fld-pick"><input type="checkbox" onchange="fieldPick(this)" /><span>MEDITECH Consulting</span></label><button onclick="fieldRemove(this)" title="Remove MEDITECH Consulting"><i data-lucide="x" class="w-3.5 h-3.5"></i></button></div>
+                <div class="fld-row"><label class="fld-pick"><input type="checkbox" onchange="fieldPick(this)" /><span>MEDITECH Professional Svcs</span></label><button onclick="fieldRemove(this)" title="Remove MEDITECH Professional Svcs"><i data-lucide="x" class="w-3.5 h-3.5"></i></button></div>
+                <div class="fld-row"><label class="fld-pick"><input type="checkbox" onchange="fieldPick(this)" /><span>PMO</span></label><button onclick="fieldRemove(this)" title="Remove PMO"><i data-lucide="x" class="w-3.5 h-3.5"></i></button></div>
+                <div class="fld-row"><label class="fld-pick"><input type="checkbox" onchange="fieldPick(this)" /><span>Sales</span></label><button onclick="fieldRemove(this)" title="Remove Sales"><i data-lucide="x" class="w-3.5 h-3.5"></i></button></div>
+                <div class="fld-row"><label class="fld-pick"><input type="checkbox" onchange="fieldPick(this)" /><span>ServiceNow</span></label><button onclick="fieldRemove(this)" title="Remove ServiceNow"><i data-lucide="x" class="w-3.5 h-3.5"></i></button></div>
+                <div class="fld-row"><label class="fld-pick"><input type="checkbox" onchange="fieldPick(this)" /><span>Staff Aug Non-HCA</span></label><button onclick="fieldRemove(this)" title="Remove Staff Aug Non-HCA"><i data-lucide="x" class="w-3.5 h-3.5"></i></button></div>
+                <div class="fld-row"><label class="fld-pick"><input type="checkbox" onchange="fieldPick(this)" /><span>Staffing Services</span></label><button onclick="fieldRemove(this)" title="Remove Staffing Services"><i data-lucide="x" class="w-3.5 h-3.5"></i></button></div>
+                <div class="fld-row"><label class="fld-pick"><input type="checkbox" onchange="fieldPick(this)" /><span>Strategic Consulting</span></label><button onclick="fieldRemove(this)" title="Remove Strategic Consulting"><i data-lucide="x" class="w-3.5 h-3.5"></i></button></div>
+                <div class="fld-row"><label class="fld-pick"><input type="checkbox" onchange="fieldPick(this)" /><span>Technology Managed Services</span></label><button onclick="fieldRemove(this)" title="Remove Technology Managed Services"><i data-lucide="x" class="w-3.5 h-3.5"></i></button></div>
+                <div class="fld-row"><label class="fld-pick"><input type="checkbox" onchange="fieldPick(this)" /><span>Technology Consulting Services</span></label><button onclick="fieldRemove(this)" title="Remove Technology Consulting Services"><i data-lucide="x" class="w-3.5 h-3.5"></i></button></div>
+                <div class="fld-row"><label class="fld-pick"><input type="checkbox" onchange="fieldPick(this)" /><span>Tech Engineering Services</span></label><button onclick="fieldRemove(this)" title="Remove Tech Engineering Services"><i data-lucide="x" class="w-3.5 h-3.5"></i></button></div>
+                <div class="fld-row"><label class="fld-pick"><input type="checkbox" onchange="fieldPick(this)" /><span>Tier 1 Support Services</span></label><button onclick="fieldRemove(this)" title="Remove Tier 1 Support Services"><i data-lucide="x" class="w-3.5 h-3.5"></i></button></div>
+                <div class="fld-row"><label class="fld-pick"><input type="checkbox" onchange="fieldPick(this)" /><span>Tier 2 Support Services</span></label><button onclick="fieldRemove(this)" title="Remove Tier 2 Support Services"><i data-lucide="x" class="w-3.5 h-3.5"></i></button></div>
             </div>
             <p class="fld-empty hidden" id="fld-dept-empty">Nothing matches that search.</p>
           </div>
@@ -2606,103 +2648,107 @@
               <button onclick="fieldCommit('mgr')" class="btn btn-brand text-xs shrink-0">Add</button>
               <button onclick="fieldCancel('mgr')" class="btn btn-ghost text-xs shrink-0">Cancel</button>
             </div>
+            <div class="fld-bulk">
+              <label class="fld-pick"><input type="checkbox" id="fld-mgr-all" onchange="fieldSelectAll('mgr', this.checked)" /><span>Select all</span></label>
+              <button id="fld-mgr-del" class="btn btn-outline fld-del text-xs" onclick="fieldRemoveSelected('mgr')" disabled><i data-lucide="trash-2" class="w-3.5 h-3.5"></i> Remove</button>
+            </div>
             <div class="fld-list" id="fld-mgr-list">
-                <div class="fld-row"><span>Alldredge, Eagle</span><button onclick="fieldRemove(this)" title="Remove Alldredge, Eagle"><i data-lucide="x" class="w-3.5 h-3.5"></i></button></div>
-                <div class="fld-row"><span>Arakas, Jennifer</span><button onclick="fieldRemove(this)" title="Remove Arakas, Jennifer"><i data-lucide="x" class="w-3.5 h-3.5"></i></button></div>
-                <div class="fld-row"><span>Bacigalupi, Michael</span><button onclick="fieldRemove(this)" title="Remove Bacigalupi, Michael"><i data-lucide="x" class="w-3.5 h-3.5"></i></button></div>
-                <div class="fld-row"><span>Barker, Kerry</span><button onclick="fieldRemove(this)" title="Remove Barker, Kerry"><i data-lucide="x" class="w-3.5 h-3.5"></i></button></div>
-                <div class="fld-row"><span>Bates, Angie</span><button onclick="fieldRemove(this)" title="Remove Bates, Angie"><i data-lucide="x" class="w-3.5 h-3.5"></i></button></div>
-                <div class="fld-row"><span>Batiste, Emily</span><button onclick="fieldRemove(this)" title="Remove Batiste, Emily"><i data-lucide="x" class="w-3.5 h-3.5"></i></button></div>
-                <div class="fld-row"><span>Berger, Casey</span><button onclick="fieldRemove(this)" title="Remove Berger, Casey"><i data-lucide="x" class="w-3.5 h-3.5"></i></button></div>
-                <div class="fld-row"><span>Brown, Pennie</span><button onclick="fieldRemove(this)" title="Remove Brown, Pennie"><i data-lucide="x" class="w-3.5 h-3.5"></i></button></div>
-                <div class="fld-row"><span>Bufalino, Chris</span><button onclick="fieldRemove(this)" title="Remove Bufalino, Chris"><i data-lucide="x" class="w-3.5 h-3.5"></i></button></div>
-                <div class="fld-row"><span>Castille, Josh</span><button onclick="fieldRemove(this)" title="Remove Castille, Josh"><i data-lucide="x" class="w-3.5 h-3.5"></i></button></div>
-                <div class="fld-row"><span>Cole, Lisa</span><button onclick="fieldRemove(this)" title="Remove Cole, Lisa"><i data-lucide="x" class="w-3.5 h-3.5"></i></button></div>
-                <div class="fld-row"><span>Cook, Deborah</span><button onclick="fieldRemove(this)" title="Remove Cook, Deborah"><i data-lucide="x" class="w-3.5 h-3.5"></i></button></div>
-                <div class="fld-row"><span>Corner, Andrea</span><button onclick="fieldRemove(this)" title="Remove Corner, Andrea"><i data-lucide="x" class="w-3.5 h-3.5"></i></button></div>
-                <div class="fld-row"><span>Cox, Kristin</span><button onclick="fieldRemove(this)" title="Remove Cox, Kristin"><i data-lucide="x" class="w-3.5 h-3.5"></i></button></div>
-                <div class="fld-row"><span>Cranford, Wendy</span><button onclick="fieldRemove(this)" title="Remove Cranford, Wendy"><i data-lucide="x" class="w-3.5 h-3.5"></i></button></div>
-                <div class="fld-row"><span>DeGroff, Doreen</span><button onclick="fieldRemove(this)" title="Remove DeGroff, Doreen"><i data-lucide="x" class="w-3.5 h-3.5"></i></button></div>
-                <div class="fld-row"><span>Dean, Mike</span><button onclick="fieldRemove(this)" title="Remove Dean, Mike"><i data-lucide="x" class="w-3.5 h-3.5"></i></button></div>
-                <div class="fld-row"><span>Demeraski, Jennifer</span><button onclick="fieldRemove(this)" title="Remove Demeraski, Jennifer"><i data-lucide="x" class="w-3.5 h-3.5"></i></button></div>
-                <div class="fld-row"><span>Dennis, Melanie</span><button onclick="fieldRemove(this)" title="Remove Dennis, Melanie"><i data-lucide="x" class="w-3.5 h-3.5"></i></button></div>
-                <div class="fld-row"><span>Dow, Devon</span><button onclick="fieldRemove(this)" title="Remove Dow, Devon"><i data-lucide="x" class="w-3.5 h-3.5"></i></button></div>
-                <div class="fld-row"><span>Dunaway, Joshua</span><button onclick="fieldRemove(this)" title="Remove Dunaway, Joshua"><i data-lucide="x" class="w-3.5 h-3.5"></i></button></div>
-                <div class="fld-row"><span>Efird, lll Treece</span><button onclick="fieldRemove(this)" title="Remove Efird, lll Treece"><i data-lucide="x" class="w-3.5 h-3.5"></i></button></div>
-                <div class="fld-row"><span>Eitniear, Nathan Felts Josh</span><button onclick="fieldRemove(this)" title="Remove Eitniear, Nathan Felts Josh"><i data-lucide="x" class="w-3.5 h-3.5"></i></button></div>
-                <div class="fld-row"><span>Fitisemanu, Jennifer</span><button onclick="fieldRemove(this)" title="Remove Fitisemanu, Jennifer"><i data-lucide="x" class="w-3.5 h-3.5"></i></button></div>
-                <div class="fld-row"><span>Flint, Patrick</span><button onclick="fieldRemove(this)" title="Remove Flint, Patrick"><i data-lucide="x" class="w-3.5 h-3.5"></i></button></div>
-                <div class="fld-row"><span>Freeze, Brigham</span><button onclick="fieldRemove(this)" title="Remove Freeze, Brigham"><i data-lucide="x" class="w-3.5 h-3.5"></i></button></div>
-                <div class="fld-row"><span>Garza, Ismelda</span><button onclick="fieldRemove(this)" title="Remove Garza, Ismelda"><i data-lucide="x" class="w-3.5 h-3.5"></i></button></div>
-                <div class="fld-row"><span>Godwin, Renee</span><button onclick="fieldRemove(this)" title="Remove Godwin, Renee"><i data-lucide="x" class="w-3.5 h-3.5"></i></button></div>
-                <div class="fld-row"><span>Greenfield, Nick</span><button onclick="fieldRemove(this)" title="Remove Greenfield, Nick"><i data-lucide="x" class="w-3.5 h-3.5"></i></button></div>
-                <div class="fld-row"><span>Grgich, Veronica</span><button onclick="fieldRemove(this)" title="Remove Grgich, Veronica"><i data-lucide="x" class="w-3.5 h-3.5"></i></button></div>
-                <div class="fld-row"><span>Grieshop, Zach</span><button onclick="fieldRemove(this)" title="Remove Grieshop, Zach"><i data-lucide="x" class="w-3.5 h-3.5"></i></button></div>
-                <div class="fld-row"><span>Grinnip, Joe</span><button onclick="fieldRemove(this)" title="Remove Grinnip, Joe"><i data-lucide="x" class="w-3.5 h-3.5"></i></button></div>
-                <div class="fld-row"><span>Gronberg, Bob</span><button onclick="fieldRemove(this)" title="Remove Gronberg, Bob"><i data-lucide="x" class="w-3.5 h-3.5"></i></button></div>
-                <div class="fld-row"><span>Groves, Chuck</span><button onclick="fieldRemove(this)" title="Remove Groves, Chuck"><i data-lucide="x" class="w-3.5 h-3.5"></i></button></div>
-                <div class="fld-row"><span>Hall, Adam</span><button onclick="fieldRemove(this)" title="Remove Hall, Adam"><i data-lucide="x" class="w-3.5 h-3.5"></i></button></div>
-                <div class="fld-row"><span>Hine, Andrew</span><button onclick="fieldRemove(this)" title="Remove Hine, Andrew"><i data-lucide="x" class="w-3.5 h-3.5"></i></button></div>
-                <div class="fld-row"><span>Holder, Sam</span><button onclick="fieldRemove(this)" title="Remove Holder, Sam"><i data-lucide="x" class="w-3.5 h-3.5"></i></button></div>
-                <div class="fld-row"><span>Hutcheson, Derrol</span><button onclick="fieldRemove(this)" title="Remove Hutcheson, Derrol"><i data-lucide="x" class="w-3.5 h-3.5"></i></button></div>
-                <div class="fld-row"><span>Jackman, Jeremy</span><button onclick="fieldRemove(this)" title="Remove Jackman, Jeremy"><i data-lucide="x" class="w-3.5 h-3.5"></i></button></div>
-                <div class="fld-row"><span>Jacobs, Stephen</span><button onclick="fieldRemove(this)" title="Remove Jacobs, Stephen"><i data-lucide="x" class="w-3.5 h-3.5"></i></button></div>
-                <div class="fld-row"><span>Jamison, Jennifer</span><button onclick="fieldRemove(this)" title="Remove Jamison, Jennifer"><i data-lucide="x" class="w-3.5 h-3.5"></i></button></div>
-                <div class="fld-row"><span>Janetvilay, Bounthavy</span><button onclick="fieldRemove(this)" title="Remove Janetvilay, Bounthavy"><i data-lucide="x" class="w-3.5 h-3.5"></i></button></div>
-                <div class="fld-row"><span>Joyce, Paul</span><button onclick="fieldRemove(this)" title="Remove Joyce, Paul"><i data-lucide="x" class="w-3.5 h-3.5"></i></button></div>
-                <div class="fld-row"><span>Kindred, Kelli</span><button onclick="fieldRemove(this)" title="Remove Kindred, Kelli"><i data-lucide="x" class="w-3.5 h-3.5"></i></button></div>
-                <div class="fld-row"><span>King, Morgan</span><button onclick="fieldRemove(this)" title="Remove King, Morgan"><i data-lucide="x" class="w-3.5 h-3.5"></i></button></div>
-                <div class="fld-row"><span>Knight, Tanya</span><button onclick="fieldRemove(this)" title="Remove Knight, Tanya"><i data-lucide="x" class="w-3.5 h-3.5"></i></button></div>
-                <div class="fld-row"><span>Koske, Nathan</span><button onclick="fieldRemove(this)" title="Remove Koske, Nathan"><i data-lucide="x" class="w-3.5 h-3.5"></i></button></div>
-                <div class="fld-row"><span>Lamasters, Julie</span><button onclick="fieldRemove(this)" title="Remove Lamasters, Julie"><i data-lucide="x" class="w-3.5 h-3.5"></i></button></div>
-                <div class="fld-row"><span>Lane, Amanda</span><button onclick="fieldRemove(this)" title="Remove Lane, Amanda"><i data-lucide="x" class="w-3.5 h-3.5"></i></button></div>
-                <div class="fld-row"><span>Love, Steve</span><button onclick="fieldRemove(this)" title="Remove Love, Steve"><i data-lucide="x" class="w-3.5 h-3.5"></i></button></div>
-                <div class="fld-row"><span>McCollum, Craig</span><button onclick="fieldRemove(this)" title="Remove McCollum, Craig"><i data-lucide="x" class="w-3.5 h-3.5"></i></button></div>
-                <div class="fld-row"><span>McInnis, Samantha</span><button onclick="fieldRemove(this)" title="Remove McInnis, Samantha"><i data-lucide="x" class="w-3.5 h-3.5"></i></button></div>
-                <div class="fld-row"><span>Messer, Sarah</span><button onclick="fieldRemove(this)" title="Remove Messer, Sarah"><i data-lucide="x" class="w-3.5 h-3.5"></i></button></div>
-                <div class="fld-row"><span>Mills, Alex</span><button onclick="fieldRemove(this)" title="Remove Mills, Alex"><i data-lucide="x" class="w-3.5 h-3.5"></i></button></div>
-                <div class="fld-row"><span>Momon, Cassandra</span><button onclick="fieldRemove(this)" title="Remove Momon, Cassandra"><i data-lucide="x" class="w-3.5 h-3.5"></i></button></div>
-                <div class="fld-row"><span>Morgado, Derrick</span><button onclick="fieldRemove(this)" title="Remove Morgado, Derrick"><i data-lucide="x" class="w-3.5 h-3.5"></i></button></div>
-                <div class="fld-row"><span>Murray, Stephanie</span><button onclick="fieldRemove(this)" title="Remove Murray, Stephanie"><i data-lucide="x" class="w-3.5 h-3.5"></i></button></div>
-                <div class="fld-row"><span>Naugle, Kevin</span><button onclick="fieldRemove(this)" title="Remove Naugle, Kevin"><i data-lucide="x" class="w-3.5 h-3.5"></i></button></div>
-                <div class="fld-row"><span>Nickoson, Staci</span><button onclick="fieldRemove(this)" title="Remove Nickoson, Staci"><i data-lucide="x" class="w-3.5 h-3.5"></i></button></div>
-                <div class="fld-row"><span>O'Dell, Matt</span><button onclick="fieldRemove(this)" title="Remove O'Dell, Matt"><i data-lucide="x" class="w-3.5 h-3.5"></i></button></div>
-                <div class="fld-row"><span>Palakie, Daphne</span><button onclick="fieldRemove(this)" title="Remove Palakie, Daphne"><i data-lucide="x" class="w-3.5 h-3.5"></i></button></div>
-                <div class="fld-row"><span>Palakie, Tom</span><button onclick="fieldRemove(this)" title="Remove Palakie, Tom"><i data-lucide="x" class="w-3.5 h-3.5"></i></button></div>
-                <div class="fld-row"><span>Paulus, Jaime</span><button onclick="fieldRemove(this)" title="Remove Paulus, Jaime"><i data-lucide="x" class="w-3.5 h-3.5"></i></button></div>
-                <div class="fld-row"><span>Perry, Jeremy</span><button onclick="fieldRemove(this)" title="Remove Perry, Jeremy"><i data-lucide="x" class="w-3.5 h-3.5"></i></button></div>
-                <div class="fld-row"><span>Phillips, Shannon</span><button onclick="fieldRemove(this)" title="Remove Phillips, Shannon"><i data-lucide="x" class="w-3.5 h-3.5"></i></button></div>
-                <div class="fld-row"><span>Porter, Donna</span><button onclick="fieldRemove(this)" title="Remove Porter, Donna"><i data-lucide="x" class="w-3.5 h-3.5"></i></button></div>
-                <div class="fld-row"><span>Potter, Caleb</span><button onclick="fieldRemove(this)" title="Remove Potter, Caleb"><i data-lucide="x" class="w-3.5 h-3.5"></i></button></div>
-                <div class="fld-row"><span>Potter, Michael</span><button onclick="fieldRemove(this)" title="Remove Potter, Michael"><i data-lucide="x" class="w-3.5 h-3.5"></i></button></div>
-                <div class="fld-row"><span>Price, James</span><button onclick="fieldRemove(this)" title="Remove Price, James"><i data-lucide="x" class="w-3.5 h-3.5"></i></button></div>
-                <div class="fld-row"><span>Ray, Jennifer</span><button onclick="fieldRemove(this)" title="Remove Ray, Jennifer"><i data-lucide="x" class="w-3.5 h-3.5"></i></button></div>
-                <div class="fld-row"><span>Read, Rhonda</span><button onclick="fieldRemove(this)" title="Remove Read, Rhonda"><i data-lucide="x" class="w-3.5 h-3.5"></i></button></div>
-                <div class="fld-row"><span>Robinson, Darren</span><button onclick="fieldRemove(this)" title="Remove Robinson, Darren"><i data-lucide="x" class="w-3.5 h-3.5"></i></button></div>
-                <div class="fld-row"><span>Ryan, Michael</span><button onclick="fieldRemove(this)" title="Remove Ryan, Michael"><i data-lucide="x" class="w-3.5 h-3.5"></i></button></div>
-                <div class="fld-row"><span>Ryan, Scott</span><button onclick="fieldRemove(this)" title="Remove Ryan, Scott"><i data-lucide="x" class="w-3.5 h-3.5"></i></button></div>
-                <div class="fld-row"><span>Scott, Michelle</span><button onclick="fieldRemove(this)" title="Remove Scott, Michelle"><i data-lucide="x" class="w-3.5 h-3.5"></i></button></div>
-                <div class="fld-row"><span>Self, Tiffany</span><button onclick="fieldRemove(this)" title="Remove Self, Tiffany"><i data-lucide="x" class="w-3.5 h-3.5"></i></button></div>
-                <div class="fld-row"><span>Shriner, Connie</span><button onclick="fieldRemove(this)" title="Remove Shriner, Connie"><i data-lucide="x" class="w-3.5 h-3.5"></i></button></div>
-                <div class="fld-row"><span>Shriner, Stephen</span><button onclick="fieldRemove(this)" title="Remove Shriner, Stephen"><i data-lucide="x" class="w-3.5 h-3.5"></i></button></div>
-                <div class="fld-row"><span>Simonis, Miller Ashley</span><button onclick="fieldRemove(this)" title="Remove Simonis, Miller Ashley"><i data-lucide="x" class="w-3.5 h-3.5"></i></button></div>
-                <div class="fld-row"><span>Singleton, Carrie</span><button onclick="fieldRemove(this)" title="Remove Singleton, Carrie"><i data-lucide="x" class="w-3.5 h-3.5"></i></button></div>
-                <div class="fld-row"><span>Sobol, Phil</span><button onclick="fieldRemove(this)" title="Remove Sobol, Phil"><i data-lucide="x" class="w-3.5 h-3.5"></i></button></div>
-                <div class="fld-row"><span>Stefanski, Gail</span><button onclick="fieldRemove(this)" title="Remove Stefanski, Gail"><i data-lucide="x" class="w-3.5 h-3.5"></i></button></div>
-                <div class="fld-row"><span>Stucka, Kerry</span><button onclick="fieldRemove(this)" title="Remove Stucka, Kerry"><i data-lucide="x" class="w-3.5 h-3.5"></i></button></div>
-                <div class="fld-row"><span>Talbot, Jared</span><button onclick="fieldRemove(this)" title="Remove Talbot, Jared"><i data-lucide="x" class="w-3.5 h-3.5"></i></button></div>
-                <div class="fld-row"><span>Trevisano, Matthew</span><button onclick="fieldRemove(this)" title="Remove Trevisano, Matthew"><i data-lucide="x" class="w-3.5 h-3.5"></i></button></div>
-                <div class="fld-row"><span>Trupiano, Brian</span><button onclick="fieldRemove(this)" title="Remove Trupiano, Brian"><i data-lucide="x" class="w-3.5 h-3.5"></i></button></div>
-                <div class="fld-row"><span>Vaden, Angela</span><button onclick="fieldRemove(this)" title="Remove Vaden, Angela"><i data-lucide="x" class="w-3.5 h-3.5"></i></button></div>
-                <div class="fld-row"><span>Walker-Collier, Robert</span><button onclick="fieldRemove(this)" title="Remove Walker-Collier, Robert"><i data-lucide="x" class="w-3.5 h-3.5"></i></button></div>
-                <div class="fld-row"><span>Walsh, John</span><button onclick="fieldRemove(this)" title="Remove Walsh, John"><i data-lucide="x" class="w-3.5 h-3.5"></i></button></div>
-                <div class="fld-row"><span>Watkins, Curtis</span><button onclick="fieldRemove(this)" title="Remove Watkins, Curtis"><i data-lucide="x" class="w-3.5 h-3.5"></i></button></div>
-                <div class="fld-row"><span>West, Tommy</span><button onclick="fieldRemove(this)" title="Remove West, Tommy"><i data-lucide="x" class="w-3.5 h-3.5"></i></button></div>
-                <div class="fld-row"><span>Whitworth, Zach</span><button onclick="fieldRemove(this)" title="Remove Whitworth, Zach"><i data-lucide="x" class="w-3.5 h-3.5"></i></button></div>
-                <div class="fld-row"><span>Wickersham, Chris</span><button onclick="fieldRemove(this)" title="Remove Wickersham, Chris"><i data-lucide="x" class="w-3.5 h-3.5"></i></button></div>
-                <div class="fld-row"><span>Wilkerson, Bekah</span><button onclick="fieldRemove(this)" title="Remove Wilkerson, Bekah"><i data-lucide="x" class="w-3.5 h-3.5"></i></button></div>
-                <div class="fld-row"><span>Ybarbo, Maribel</span><button onclick="fieldRemove(this)" title="Remove Ybarbo, Maribel"><i data-lucide="x" class="w-3.5 h-3.5"></i></button></div>
-                <div class="fld-row"><span>Zand, Peyman</span><button onclick="fieldRemove(this)" title="Remove Zand, Peyman"><i data-lucide="x" class="w-3.5 h-3.5"></i></button></div>
+                <div class="fld-row"><label class="fld-pick"><input type="checkbox" onchange="fieldPick(this)" /><span>Alldredge, Eagle</span></label><button onclick="fieldRemove(this)" title="Remove Alldredge, Eagle"><i data-lucide="x" class="w-3.5 h-3.5"></i></button></div>
+                <div class="fld-row"><label class="fld-pick"><input type="checkbox" onchange="fieldPick(this)" /><span>Arakas, Jennifer</span></label><button onclick="fieldRemove(this)" title="Remove Arakas, Jennifer"><i data-lucide="x" class="w-3.5 h-3.5"></i></button></div>
+                <div class="fld-row"><label class="fld-pick"><input type="checkbox" onchange="fieldPick(this)" /><span>Bacigalupi, Michael</span></label><button onclick="fieldRemove(this)" title="Remove Bacigalupi, Michael"><i data-lucide="x" class="w-3.5 h-3.5"></i></button></div>
+                <div class="fld-row"><label class="fld-pick"><input type="checkbox" onchange="fieldPick(this)" /><span>Barker, Kerry</span></label><button onclick="fieldRemove(this)" title="Remove Barker, Kerry"><i data-lucide="x" class="w-3.5 h-3.5"></i></button></div>
+                <div class="fld-row"><label class="fld-pick"><input type="checkbox" onchange="fieldPick(this)" /><span>Bates, Angie</span></label><button onclick="fieldRemove(this)" title="Remove Bates, Angie"><i data-lucide="x" class="w-3.5 h-3.5"></i></button></div>
+                <div class="fld-row"><label class="fld-pick"><input type="checkbox" onchange="fieldPick(this)" /><span>Batiste, Emily</span></label><button onclick="fieldRemove(this)" title="Remove Batiste, Emily"><i data-lucide="x" class="w-3.5 h-3.5"></i></button></div>
+                <div class="fld-row"><label class="fld-pick"><input type="checkbox" onchange="fieldPick(this)" /><span>Berger, Casey</span></label><button onclick="fieldRemove(this)" title="Remove Berger, Casey"><i data-lucide="x" class="w-3.5 h-3.5"></i></button></div>
+                <div class="fld-row"><label class="fld-pick"><input type="checkbox" onchange="fieldPick(this)" /><span>Brown, Pennie</span></label><button onclick="fieldRemove(this)" title="Remove Brown, Pennie"><i data-lucide="x" class="w-3.5 h-3.5"></i></button></div>
+                <div class="fld-row"><label class="fld-pick"><input type="checkbox" onchange="fieldPick(this)" /><span>Bufalino, Chris</span></label><button onclick="fieldRemove(this)" title="Remove Bufalino, Chris"><i data-lucide="x" class="w-3.5 h-3.5"></i></button></div>
+                <div class="fld-row"><label class="fld-pick"><input type="checkbox" onchange="fieldPick(this)" /><span>Castille, Josh</span></label><button onclick="fieldRemove(this)" title="Remove Castille, Josh"><i data-lucide="x" class="w-3.5 h-3.5"></i></button></div>
+                <div class="fld-row"><label class="fld-pick"><input type="checkbox" onchange="fieldPick(this)" /><span>Cole, Lisa</span></label><button onclick="fieldRemove(this)" title="Remove Cole, Lisa"><i data-lucide="x" class="w-3.5 h-3.5"></i></button></div>
+                <div class="fld-row"><label class="fld-pick"><input type="checkbox" onchange="fieldPick(this)" /><span>Cook, Deborah</span></label><button onclick="fieldRemove(this)" title="Remove Cook, Deborah"><i data-lucide="x" class="w-3.5 h-3.5"></i></button></div>
+                <div class="fld-row"><label class="fld-pick"><input type="checkbox" onchange="fieldPick(this)" /><span>Corner, Andrea</span></label><button onclick="fieldRemove(this)" title="Remove Corner, Andrea"><i data-lucide="x" class="w-3.5 h-3.5"></i></button></div>
+                <div class="fld-row"><label class="fld-pick"><input type="checkbox" onchange="fieldPick(this)" /><span>Cox, Kristin</span></label><button onclick="fieldRemove(this)" title="Remove Cox, Kristin"><i data-lucide="x" class="w-3.5 h-3.5"></i></button></div>
+                <div class="fld-row"><label class="fld-pick"><input type="checkbox" onchange="fieldPick(this)" /><span>Cranford, Wendy</span></label><button onclick="fieldRemove(this)" title="Remove Cranford, Wendy"><i data-lucide="x" class="w-3.5 h-3.5"></i></button></div>
+                <div class="fld-row"><label class="fld-pick"><input type="checkbox" onchange="fieldPick(this)" /><span>DeGroff, Doreen</span></label><button onclick="fieldRemove(this)" title="Remove DeGroff, Doreen"><i data-lucide="x" class="w-3.5 h-3.5"></i></button></div>
+                <div class="fld-row"><label class="fld-pick"><input type="checkbox" onchange="fieldPick(this)" /><span>Dean, Mike</span></label><button onclick="fieldRemove(this)" title="Remove Dean, Mike"><i data-lucide="x" class="w-3.5 h-3.5"></i></button></div>
+                <div class="fld-row"><label class="fld-pick"><input type="checkbox" onchange="fieldPick(this)" /><span>Demeraski, Jennifer</span></label><button onclick="fieldRemove(this)" title="Remove Demeraski, Jennifer"><i data-lucide="x" class="w-3.5 h-3.5"></i></button></div>
+                <div class="fld-row"><label class="fld-pick"><input type="checkbox" onchange="fieldPick(this)" /><span>Dennis, Melanie</span></label><button onclick="fieldRemove(this)" title="Remove Dennis, Melanie"><i data-lucide="x" class="w-3.5 h-3.5"></i></button></div>
+                <div class="fld-row"><label class="fld-pick"><input type="checkbox" onchange="fieldPick(this)" /><span>Dow, Devon</span></label><button onclick="fieldRemove(this)" title="Remove Dow, Devon"><i data-lucide="x" class="w-3.5 h-3.5"></i></button></div>
+                <div class="fld-row"><label class="fld-pick"><input type="checkbox" onchange="fieldPick(this)" /><span>Dunaway, Joshua</span></label><button onclick="fieldRemove(this)" title="Remove Dunaway, Joshua"><i data-lucide="x" class="w-3.5 h-3.5"></i></button></div>
+                <div class="fld-row"><label class="fld-pick"><input type="checkbox" onchange="fieldPick(this)" /><span>Efird, lll Treece</span></label><button onclick="fieldRemove(this)" title="Remove Efird, lll Treece"><i data-lucide="x" class="w-3.5 h-3.5"></i></button></div>
+                <div class="fld-row"><label class="fld-pick"><input type="checkbox" onchange="fieldPick(this)" /><span>Eitniear, Nathan Felts Josh</span></label><button onclick="fieldRemove(this)" title="Remove Eitniear, Nathan Felts Josh"><i data-lucide="x" class="w-3.5 h-3.5"></i></button></div>
+                <div class="fld-row"><label class="fld-pick"><input type="checkbox" onchange="fieldPick(this)" /><span>Fitisemanu, Jennifer</span></label><button onclick="fieldRemove(this)" title="Remove Fitisemanu, Jennifer"><i data-lucide="x" class="w-3.5 h-3.5"></i></button></div>
+                <div class="fld-row"><label class="fld-pick"><input type="checkbox" onchange="fieldPick(this)" /><span>Flint, Patrick</span></label><button onclick="fieldRemove(this)" title="Remove Flint, Patrick"><i data-lucide="x" class="w-3.5 h-3.5"></i></button></div>
+                <div class="fld-row"><label class="fld-pick"><input type="checkbox" onchange="fieldPick(this)" /><span>Freeze, Brigham</span></label><button onclick="fieldRemove(this)" title="Remove Freeze, Brigham"><i data-lucide="x" class="w-3.5 h-3.5"></i></button></div>
+                <div class="fld-row"><label class="fld-pick"><input type="checkbox" onchange="fieldPick(this)" /><span>Garza, Ismelda</span></label><button onclick="fieldRemove(this)" title="Remove Garza, Ismelda"><i data-lucide="x" class="w-3.5 h-3.5"></i></button></div>
+                <div class="fld-row"><label class="fld-pick"><input type="checkbox" onchange="fieldPick(this)" /><span>Godwin, Renee</span></label><button onclick="fieldRemove(this)" title="Remove Godwin, Renee"><i data-lucide="x" class="w-3.5 h-3.5"></i></button></div>
+                <div class="fld-row"><label class="fld-pick"><input type="checkbox" onchange="fieldPick(this)" /><span>Greenfield, Nick</span></label><button onclick="fieldRemove(this)" title="Remove Greenfield, Nick"><i data-lucide="x" class="w-3.5 h-3.5"></i></button></div>
+                <div class="fld-row"><label class="fld-pick"><input type="checkbox" onchange="fieldPick(this)" /><span>Grgich, Veronica</span></label><button onclick="fieldRemove(this)" title="Remove Grgich, Veronica"><i data-lucide="x" class="w-3.5 h-3.5"></i></button></div>
+                <div class="fld-row"><label class="fld-pick"><input type="checkbox" onchange="fieldPick(this)" /><span>Grieshop, Zach</span></label><button onclick="fieldRemove(this)" title="Remove Grieshop, Zach"><i data-lucide="x" class="w-3.5 h-3.5"></i></button></div>
+                <div class="fld-row"><label class="fld-pick"><input type="checkbox" onchange="fieldPick(this)" /><span>Grinnip, Joe</span></label><button onclick="fieldRemove(this)" title="Remove Grinnip, Joe"><i data-lucide="x" class="w-3.5 h-3.5"></i></button></div>
+                <div class="fld-row"><label class="fld-pick"><input type="checkbox" onchange="fieldPick(this)" /><span>Gronberg, Bob</span></label><button onclick="fieldRemove(this)" title="Remove Gronberg, Bob"><i data-lucide="x" class="w-3.5 h-3.5"></i></button></div>
+                <div class="fld-row"><label class="fld-pick"><input type="checkbox" onchange="fieldPick(this)" /><span>Groves, Chuck</span></label><button onclick="fieldRemove(this)" title="Remove Groves, Chuck"><i data-lucide="x" class="w-3.5 h-3.5"></i></button></div>
+                <div class="fld-row"><label class="fld-pick"><input type="checkbox" onchange="fieldPick(this)" /><span>Hall, Adam</span></label><button onclick="fieldRemove(this)" title="Remove Hall, Adam"><i data-lucide="x" class="w-3.5 h-3.5"></i></button></div>
+                <div class="fld-row"><label class="fld-pick"><input type="checkbox" onchange="fieldPick(this)" /><span>Hine, Andrew</span></label><button onclick="fieldRemove(this)" title="Remove Hine, Andrew"><i data-lucide="x" class="w-3.5 h-3.5"></i></button></div>
+                <div class="fld-row"><label class="fld-pick"><input type="checkbox" onchange="fieldPick(this)" /><span>Holder, Sam</span></label><button onclick="fieldRemove(this)" title="Remove Holder, Sam"><i data-lucide="x" class="w-3.5 h-3.5"></i></button></div>
+                <div class="fld-row"><label class="fld-pick"><input type="checkbox" onchange="fieldPick(this)" /><span>Hutcheson, Derrol</span></label><button onclick="fieldRemove(this)" title="Remove Hutcheson, Derrol"><i data-lucide="x" class="w-3.5 h-3.5"></i></button></div>
+                <div class="fld-row"><label class="fld-pick"><input type="checkbox" onchange="fieldPick(this)" /><span>Jackman, Jeremy</span></label><button onclick="fieldRemove(this)" title="Remove Jackman, Jeremy"><i data-lucide="x" class="w-3.5 h-3.5"></i></button></div>
+                <div class="fld-row"><label class="fld-pick"><input type="checkbox" onchange="fieldPick(this)" /><span>Jacobs, Stephen</span></label><button onclick="fieldRemove(this)" title="Remove Jacobs, Stephen"><i data-lucide="x" class="w-3.5 h-3.5"></i></button></div>
+                <div class="fld-row"><label class="fld-pick"><input type="checkbox" onchange="fieldPick(this)" /><span>Jamison, Jennifer</span></label><button onclick="fieldRemove(this)" title="Remove Jamison, Jennifer"><i data-lucide="x" class="w-3.5 h-3.5"></i></button></div>
+                <div class="fld-row"><label class="fld-pick"><input type="checkbox" onchange="fieldPick(this)" /><span>Janetvilay, Bounthavy</span></label><button onclick="fieldRemove(this)" title="Remove Janetvilay, Bounthavy"><i data-lucide="x" class="w-3.5 h-3.5"></i></button></div>
+                <div class="fld-row"><label class="fld-pick"><input type="checkbox" onchange="fieldPick(this)" /><span>Joyce, Paul</span></label><button onclick="fieldRemove(this)" title="Remove Joyce, Paul"><i data-lucide="x" class="w-3.5 h-3.5"></i></button></div>
+                <div class="fld-row"><label class="fld-pick"><input type="checkbox" onchange="fieldPick(this)" /><span>Kindred, Kelli</span></label><button onclick="fieldRemove(this)" title="Remove Kindred, Kelli"><i data-lucide="x" class="w-3.5 h-3.5"></i></button></div>
+                <div class="fld-row"><label class="fld-pick"><input type="checkbox" onchange="fieldPick(this)" /><span>King, Morgan</span></label><button onclick="fieldRemove(this)" title="Remove King, Morgan"><i data-lucide="x" class="w-3.5 h-3.5"></i></button></div>
+                <div class="fld-row"><label class="fld-pick"><input type="checkbox" onchange="fieldPick(this)" /><span>Knight, Tanya</span></label><button onclick="fieldRemove(this)" title="Remove Knight, Tanya"><i data-lucide="x" class="w-3.5 h-3.5"></i></button></div>
+                <div class="fld-row"><label class="fld-pick"><input type="checkbox" onchange="fieldPick(this)" /><span>Koske, Nathan</span></label><button onclick="fieldRemove(this)" title="Remove Koske, Nathan"><i data-lucide="x" class="w-3.5 h-3.5"></i></button></div>
+                <div class="fld-row"><label class="fld-pick"><input type="checkbox" onchange="fieldPick(this)" /><span>Lamasters, Julie</span></label><button onclick="fieldRemove(this)" title="Remove Lamasters, Julie"><i data-lucide="x" class="w-3.5 h-3.5"></i></button></div>
+                <div class="fld-row"><label class="fld-pick"><input type="checkbox" onchange="fieldPick(this)" /><span>Lane, Amanda</span></label><button onclick="fieldRemove(this)" title="Remove Lane, Amanda"><i data-lucide="x" class="w-3.5 h-3.5"></i></button></div>
+                <div class="fld-row"><label class="fld-pick"><input type="checkbox" onchange="fieldPick(this)" /><span>Love, Steve</span></label><button onclick="fieldRemove(this)" title="Remove Love, Steve"><i data-lucide="x" class="w-3.5 h-3.5"></i></button></div>
+                <div class="fld-row"><label class="fld-pick"><input type="checkbox" onchange="fieldPick(this)" /><span>McCollum, Craig</span></label><button onclick="fieldRemove(this)" title="Remove McCollum, Craig"><i data-lucide="x" class="w-3.5 h-3.5"></i></button></div>
+                <div class="fld-row"><label class="fld-pick"><input type="checkbox" onchange="fieldPick(this)" /><span>McInnis, Samantha</span></label><button onclick="fieldRemove(this)" title="Remove McInnis, Samantha"><i data-lucide="x" class="w-3.5 h-3.5"></i></button></div>
+                <div class="fld-row"><label class="fld-pick"><input type="checkbox" onchange="fieldPick(this)" /><span>Messer, Sarah</span></label><button onclick="fieldRemove(this)" title="Remove Messer, Sarah"><i data-lucide="x" class="w-3.5 h-3.5"></i></button></div>
+                <div class="fld-row"><label class="fld-pick"><input type="checkbox" onchange="fieldPick(this)" /><span>Mills, Alex</span></label><button onclick="fieldRemove(this)" title="Remove Mills, Alex"><i data-lucide="x" class="w-3.5 h-3.5"></i></button></div>
+                <div class="fld-row"><label class="fld-pick"><input type="checkbox" onchange="fieldPick(this)" /><span>Momon, Cassandra</span></label><button onclick="fieldRemove(this)" title="Remove Momon, Cassandra"><i data-lucide="x" class="w-3.5 h-3.5"></i></button></div>
+                <div class="fld-row"><label class="fld-pick"><input type="checkbox" onchange="fieldPick(this)" /><span>Morgado, Derrick</span></label><button onclick="fieldRemove(this)" title="Remove Morgado, Derrick"><i data-lucide="x" class="w-3.5 h-3.5"></i></button></div>
+                <div class="fld-row"><label class="fld-pick"><input type="checkbox" onchange="fieldPick(this)" /><span>Murray, Stephanie</span></label><button onclick="fieldRemove(this)" title="Remove Murray, Stephanie"><i data-lucide="x" class="w-3.5 h-3.5"></i></button></div>
+                <div class="fld-row"><label class="fld-pick"><input type="checkbox" onchange="fieldPick(this)" /><span>Naugle, Kevin</span></label><button onclick="fieldRemove(this)" title="Remove Naugle, Kevin"><i data-lucide="x" class="w-3.5 h-3.5"></i></button></div>
+                <div class="fld-row"><label class="fld-pick"><input type="checkbox" onchange="fieldPick(this)" /><span>Nickoson, Staci</span></label><button onclick="fieldRemove(this)" title="Remove Nickoson, Staci"><i data-lucide="x" class="w-3.5 h-3.5"></i></button></div>
+                <div class="fld-row"><label class="fld-pick"><input type="checkbox" onchange="fieldPick(this)" /><span>O'Dell, Matt</span></label><button onclick="fieldRemove(this)" title="Remove O'Dell, Matt"><i data-lucide="x" class="w-3.5 h-3.5"></i></button></div>
+                <div class="fld-row"><label class="fld-pick"><input type="checkbox" onchange="fieldPick(this)" /><span>Palakie, Daphne</span></label><button onclick="fieldRemove(this)" title="Remove Palakie, Daphne"><i data-lucide="x" class="w-3.5 h-3.5"></i></button></div>
+                <div class="fld-row"><label class="fld-pick"><input type="checkbox" onchange="fieldPick(this)" /><span>Palakie, Tom</span></label><button onclick="fieldRemove(this)" title="Remove Palakie, Tom"><i data-lucide="x" class="w-3.5 h-3.5"></i></button></div>
+                <div class="fld-row"><label class="fld-pick"><input type="checkbox" onchange="fieldPick(this)" /><span>Paulus, Jaime</span></label><button onclick="fieldRemove(this)" title="Remove Paulus, Jaime"><i data-lucide="x" class="w-3.5 h-3.5"></i></button></div>
+                <div class="fld-row"><label class="fld-pick"><input type="checkbox" onchange="fieldPick(this)" /><span>Perry, Jeremy</span></label><button onclick="fieldRemove(this)" title="Remove Perry, Jeremy"><i data-lucide="x" class="w-3.5 h-3.5"></i></button></div>
+                <div class="fld-row"><label class="fld-pick"><input type="checkbox" onchange="fieldPick(this)" /><span>Phillips, Shannon</span></label><button onclick="fieldRemove(this)" title="Remove Phillips, Shannon"><i data-lucide="x" class="w-3.5 h-3.5"></i></button></div>
+                <div class="fld-row"><label class="fld-pick"><input type="checkbox" onchange="fieldPick(this)" /><span>Porter, Donna</span></label><button onclick="fieldRemove(this)" title="Remove Porter, Donna"><i data-lucide="x" class="w-3.5 h-3.5"></i></button></div>
+                <div class="fld-row"><label class="fld-pick"><input type="checkbox" onchange="fieldPick(this)" /><span>Potter, Caleb</span></label><button onclick="fieldRemove(this)" title="Remove Potter, Caleb"><i data-lucide="x" class="w-3.5 h-3.5"></i></button></div>
+                <div class="fld-row"><label class="fld-pick"><input type="checkbox" onchange="fieldPick(this)" /><span>Potter, Michael</span></label><button onclick="fieldRemove(this)" title="Remove Potter, Michael"><i data-lucide="x" class="w-3.5 h-3.5"></i></button></div>
+                <div class="fld-row"><label class="fld-pick"><input type="checkbox" onchange="fieldPick(this)" /><span>Price, James</span></label><button onclick="fieldRemove(this)" title="Remove Price, James"><i data-lucide="x" class="w-3.5 h-3.5"></i></button></div>
+                <div class="fld-row"><label class="fld-pick"><input type="checkbox" onchange="fieldPick(this)" /><span>Ray, Jennifer</span></label><button onclick="fieldRemove(this)" title="Remove Ray, Jennifer"><i data-lucide="x" class="w-3.5 h-3.5"></i></button></div>
+                <div class="fld-row"><label class="fld-pick"><input type="checkbox" onchange="fieldPick(this)" /><span>Read, Rhonda</span></label><button onclick="fieldRemove(this)" title="Remove Read, Rhonda"><i data-lucide="x" class="w-3.5 h-3.5"></i></button></div>
+                <div class="fld-row"><label class="fld-pick"><input type="checkbox" onchange="fieldPick(this)" /><span>Robinson, Darren</span></label><button onclick="fieldRemove(this)" title="Remove Robinson, Darren"><i data-lucide="x" class="w-3.5 h-3.5"></i></button></div>
+                <div class="fld-row"><label class="fld-pick"><input type="checkbox" onchange="fieldPick(this)" /><span>Ryan, Michael</span></label><button onclick="fieldRemove(this)" title="Remove Ryan, Michael"><i data-lucide="x" class="w-3.5 h-3.5"></i></button></div>
+                <div class="fld-row"><label class="fld-pick"><input type="checkbox" onchange="fieldPick(this)" /><span>Ryan, Scott</span></label><button onclick="fieldRemove(this)" title="Remove Ryan, Scott"><i data-lucide="x" class="w-3.5 h-3.5"></i></button></div>
+                <div class="fld-row"><label class="fld-pick"><input type="checkbox" onchange="fieldPick(this)" /><span>Scott, Michelle</span></label><button onclick="fieldRemove(this)" title="Remove Scott, Michelle"><i data-lucide="x" class="w-3.5 h-3.5"></i></button></div>
+                <div class="fld-row"><label class="fld-pick"><input type="checkbox" onchange="fieldPick(this)" /><span>Self, Tiffany</span></label><button onclick="fieldRemove(this)" title="Remove Self, Tiffany"><i data-lucide="x" class="w-3.5 h-3.5"></i></button></div>
+                <div class="fld-row"><label class="fld-pick"><input type="checkbox" onchange="fieldPick(this)" /><span>Shriner, Connie</span></label><button onclick="fieldRemove(this)" title="Remove Shriner, Connie"><i data-lucide="x" class="w-3.5 h-3.5"></i></button></div>
+                <div class="fld-row"><label class="fld-pick"><input type="checkbox" onchange="fieldPick(this)" /><span>Shriner, Stephen</span></label><button onclick="fieldRemove(this)" title="Remove Shriner, Stephen"><i data-lucide="x" class="w-3.5 h-3.5"></i></button></div>
+                <div class="fld-row"><label class="fld-pick"><input type="checkbox" onchange="fieldPick(this)" /><span>Simonis, Miller Ashley</span></label><button onclick="fieldRemove(this)" title="Remove Simonis, Miller Ashley"><i data-lucide="x" class="w-3.5 h-3.5"></i></button></div>
+                <div class="fld-row"><label class="fld-pick"><input type="checkbox" onchange="fieldPick(this)" /><span>Singleton, Carrie</span></label><button onclick="fieldRemove(this)" title="Remove Singleton, Carrie"><i data-lucide="x" class="w-3.5 h-3.5"></i></button></div>
+                <div class="fld-row"><label class="fld-pick"><input type="checkbox" onchange="fieldPick(this)" /><span>Sobol, Phil</span></label><button onclick="fieldRemove(this)" title="Remove Sobol, Phil"><i data-lucide="x" class="w-3.5 h-3.5"></i></button></div>
+                <div class="fld-row"><label class="fld-pick"><input type="checkbox" onchange="fieldPick(this)" /><span>Stefanski, Gail</span></label><button onclick="fieldRemove(this)" title="Remove Stefanski, Gail"><i data-lucide="x" class="w-3.5 h-3.5"></i></button></div>
+                <div class="fld-row"><label class="fld-pick"><input type="checkbox" onchange="fieldPick(this)" /><span>Stucka, Kerry</span></label><button onclick="fieldRemove(this)" title="Remove Stucka, Kerry"><i data-lucide="x" class="w-3.5 h-3.5"></i></button></div>
+                <div class="fld-row"><label class="fld-pick"><input type="checkbox" onchange="fieldPick(this)" /><span>Talbot, Jared</span></label><button onclick="fieldRemove(this)" title="Remove Talbot, Jared"><i data-lucide="x" class="w-3.5 h-3.5"></i></button></div>
+                <div class="fld-row"><label class="fld-pick"><input type="checkbox" onchange="fieldPick(this)" /><span>Trevisano, Matthew</span></label><button onclick="fieldRemove(this)" title="Remove Trevisano, Matthew"><i data-lucide="x" class="w-3.5 h-3.5"></i></button></div>
+                <div class="fld-row"><label class="fld-pick"><input type="checkbox" onchange="fieldPick(this)" /><span>Trupiano, Brian</span></label><button onclick="fieldRemove(this)" title="Remove Trupiano, Brian"><i data-lucide="x" class="w-3.5 h-3.5"></i></button></div>
+                <div class="fld-row"><label class="fld-pick"><input type="checkbox" onchange="fieldPick(this)" /><span>Vaden, Angela</span></label><button onclick="fieldRemove(this)" title="Remove Vaden, Angela"><i data-lucide="x" class="w-3.5 h-3.5"></i></button></div>
+                <div class="fld-row"><label class="fld-pick"><input type="checkbox" onchange="fieldPick(this)" /><span>Walker-Collier, Robert</span></label><button onclick="fieldRemove(this)" title="Remove Walker-Collier, Robert"><i data-lucide="x" class="w-3.5 h-3.5"></i></button></div>
+                <div class="fld-row"><label class="fld-pick"><input type="checkbox" onchange="fieldPick(this)" /><span>Walsh, John</span></label><button onclick="fieldRemove(this)" title="Remove Walsh, John"><i data-lucide="x" class="w-3.5 h-3.5"></i></button></div>
+                <div class="fld-row"><label class="fld-pick"><input type="checkbox" onchange="fieldPick(this)" /><span>Watkins, Curtis</span></label><button onclick="fieldRemove(this)" title="Remove Watkins, Curtis"><i data-lucide="x" class="w-3.5 h-3.5"></i></button></div>
+                <div class="fld-row"><label class="fld-pick"><input type="checkbox" onchange="fieldPick(this)" /><span>West, Tommy</span></label><button onclick="fieldRemove(this)" title="Remove West, Tommy"><i data-lucide="x" class="w-3.5 h-3.5"></i></button></div>
+                <div class="fld-row"><label class="fld-pick"><input type="checkbox" onchange="fieldPick(this)" /><span>Whitworth, Zach</span></label><button onclick="fieldRemove(this)" title="Remove Whitworth, Zach"><i data-lucide="x" class="w-3.5 h-3.5"></i></button></div>
+                <div class="fld-row"><label class="fld-pick"><input type="checkbox" onchange="fieldPick(this)" /><span>Wickersham, Chris</span></label><button onclick="fieldRemove(this)" title="Remove Wickersham, Chris"><i data-lucide="x" class="w-3.5 h-3.5"></i></button></div>
+                <div class="fld-row"><label class="fld-pick"><input type="checkbox" onchange="fieldPick(this)" /><span>Wilkerson, Bekah</span></label><button onclick="fieldRemove(this)" title="Remove Wilkerson, Bekah"><i data-lucide="x" class="w-3.5 h-3.5"></i></button></div>
+                <div class="fld-row"><label class="fld-pick"><input type="checkbox" onchange="fieldPick(this)" /><span>Ybarbo, Maribel</span></label><button onclick="fieldRemove(this)" title="Remove Ybarbo, Maribel"><i data-lucide="x" class="w-3.5 h-3.5"></i></button></div>
+                <div class="fld-row"><label class="fld-pick"><input type="checkbox" onchange="fieldPick(this)" /><span>Zand, Peyman</span></label><button onclick="fieldRemove(this)" title="Remove Zand, Peyman"><i data-lucide="x" class="w-3.5 h-3.5"></i></button></div>
             </div>
             <p class="fld-empty hidden" id="fld-mgr-empty">Nothing matches that search.</p>
           </div>
@@ -3661,9 +3707,12 @@
     document.querySelectorAll('#fld-' + kind + '-list .fld-row').forEach(function (row) {
       const hit = row.firstElementChild.textContent.toLowerCase().includes(q);
       row.style.display = hit ? '' : 'none';
+      // a filtered-out row must not stay ticked, or Remove would delete something off screen
+      if (!hit) row.querySelector('input').checked = false;
       if (hit) shown++;
     });
     document.getElementById('fld-' + kind + '-empty').classList.toggle('hidden', shown > 0);
+    fieldSyncBulk(kind);
   }
   function fieldToggle(kind) {
     const body = document.getElementById('fld-' + kind + '-body');
@@ -3677,6 +3726,44 @@
     const kind = row.closest('.fld-list').id.split('-')[1];
     row.remove();
     fieldCount(kind);
+    fieldSyncBulk(kind);
+  }
+  // Bulk select. Jennifer trims 96 managers down to ten for a small offsite —
+  // one ✕ at a time is the whole objection.
+  function fieldRows(kind) {
+    return Array.from(document.querySelectorAll('#fld-' + kind + '-list .fld-row'));
+  }
+  function fieldVisibleRows(kind) {
+    return fieldRows(kind).filter(function (r) { return r.style.display !== 'none'; });
+  }
+  function fieldPick(box) {
+    fieldSyncBulk(box.closest('.fld-list').id.split('-')[1]);
+  }
+  function fieldSelectAll(kind, on) {
+    // only what's on screen — ticking rows hidden behind a search would delete the unseen
+    fieldVisibleRows(kind).forEach(function (r) { r.querySelector('input').checked = on; });
+    fieldSyncBulk(kind);
+  }
+  function fieldSyncBulk(kind) {
+    const visible = fieldVisibleRows(kind);
+    const picked = visible.filter(function (r) { return r.querySelector('input').checked; });
+    const all = document.getElementById('fld-' + kind + '-all');
+    if (all) {
+      all.checked = visible.length > 0 && picked.length === visible.length;
+      all.indeterminate = picked.length > 0 && picked.length < visible.length;
+    }
+    const btn = document.getElementById('fld-' + kind + '-del');
+    if (btn) {
+      btn.disabled = picked.length === 0;
+      btn.lastChild.textContent = picked.length ? ' Remove (' + picked.length + ')' : ' Remove';
+    }
+  }
+  function fieldRemoveSelected(kind) {
+    const picked = fieldRows(kind).filter(function (r) { return r.querySelector('input').checked; });
+    if (!picked.length) return;
+    picked.forEach(function (r) { r.remove(); });
+    fieldCount(kind);
+    fieldSyncBulk(kind);
   }
   function fieldAdd(kind) {
     const box = document.getElementById('fld-' + kind + '-new');
@@ -3702,8 +3789,9 @@
     }
     const row = document.createElement('div');
     row.className = 'fld-row';
-    row.innerHTML = '<span></span><button onclick="fieldRemove(this)" title="Remove"><i data-lucide="x" class="w-3.5 h-3.5"></i></button>';
-    row.firstElementChild.textContent = value;
+    row.innerHTML = '<label class="fld-pick"><input type="checkbox" onchange="fieldPick(this)" /><span></span></label>'
+      + '<button onclick="fieldRemove(this)" title="Remove"><i data-lucide="x" class="w-3.5 h-3.5"></i></button>';
+    row.querySelector('.fld-pick span').textContent = value;
     const after = existing.find(function (r) { return r.firstElementChild.textContent.localeCompare(value) > 0; });
     list.insertBefore(row, after || null);
     fieldCount(kind);
@@ -4053,19 +4141,26 @@
 
   // Explicit save only — nothing persists until the Save button is clicked
   let wbDirty = false;
+  function wbOnGame() {
+    const game = document.getElementById('wb-game-panel');
+    return !!(game && !game.classList.contains('hidden'));
+  }
   function wbSetDirty(v) {
     wbDirty = v;
-    const tag = document.getElementById('wb-dirty');
-    if (tag) tag.classList.toggle('hidden', !v);
+    ['wb-dirty', 'wb-game-dirty'].forEach(id => {
+      const tag = document.getElementById(id);
+      if (tag) tag.classList.toggle('hidden', !v);
+    });
   }
   function wbSave() {
-    const canvas = document.getElementById('wb-canvas');
-    if (!currentSitePage) return;
+    const onGame = wbOnGame();
+    const canvas = document.getElementById(onGame ? 'wb-game-canvas' : 'wb-canvas');
+    if (!currentSitePage || !canvas) return;
     siteContent[currentSitePage] = canvas.innerHTML;
     const heroTitle = document.getElementById('wb-title');
-    if (heroTitle) siteTitles[currentSitePage] = heroTitle.innerHTML;
+    if (heroTitle && !onGame) siteTitles[currentSitePage] = heroTitle.innerHTML;
     wbSetDirty(false);
-    const btn = document.getElementById('wb-save-btn');
+    const btn = document.getElementById(onGame ? 'wb-game-save-btn' : 'wb-save-btn');
     if (btn) {
       btn.textContent = 'Saved';
       setTimeout(() => { btn.textContent = 'Save'; }, 1600);
@@ -4093,8 +4188,14 @@
     if (cm) cm.classList.add('hidden');
   });
 
+  function wbActiveCanvas() {
+    const game = document.getElementById('wb-game-panel');
+    const onGame = game && !game.classList.contains('hidden');
+    return document.getElementById(onGame ? 'wb-game-canvas' : 'wb-canvas');
+  }
   function wbFormat(cmd, val) {
-    document.getElementById('wb-canvas').focus();
+    const canvas = wbActiveCanvas();
+    if (canvas) canvas.focus();
     document.execCommand(cmd, false, val || null);
   }
   // HTML source view — see and edit the underlying markup
@@ -4125,7 +4226,7 @@
     el.addEventListener('input', () => rfSetDirty(true));
   });
 
-  ['wb-canvas', 'wb-title'].forEach(id => {
+  ['wb-canvas', 'wb-game-canvas', 'wb-title'].forEach(id => {
     const el = document.getElementById(id);
     if (el) el.addEventListener('input', () => wbSetDirty(true));
   });
